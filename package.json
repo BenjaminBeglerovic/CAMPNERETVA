@@ -1,5 +1,7 @@
 
-
+"scripts": {
+  "start": "node server.js"
+}
 {
   "name": "kalkulator-cijena",
   "version": "1.0.0",
