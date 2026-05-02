@@ -1,0 +1,2495 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EVIDENCIJA TURISTA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0e0f11;
+      --surface: #16181c;
+      --card: #1d2026;
+      --border: #2a2d35;
+      --accent: #f5a623;
+      --accent2: #e8534a;
+      --text: #f0f0f0;
+      --muted: #7a7f8e;
+      --success: #3ecf8e;
+      --bam: #5b9cf6;
+      --radius: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 40px 20px 80px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse at 15% 15%, rgba(245,166,35,0.08) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 85%, rgba(91,156,246,0.07) 0%, transparent 55%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .container { max-width: 820px; margin: 0 auto; position: relative; z-index: 1; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header { text-align: center; margin-bottom: 52px; }
+
+    .badge {
+      display: inline-block;
+      background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.3);
+      color: var(--accent); font-family: 'Syne', sans-serif;
+      font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+      padding: 6px 16px; border-radius: 100px; margin-bottom: 20px;
+    }
+
+    h1 { font-family: 'Syne', sans-serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; }
+    h1 span { color: var(--accent); }
+    .subtitle { color: var(--muted); font-size: 15px; font-weight: 300; margin-top: 12px; line-height: 1.6; }
+
+    /* ── Card ───────────────────────────────────────────────── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin-bottom: 20px; }
+
+    /* ── Mode tabs (Individualni / Grupa) ─────────────────── */
+    .mode-tabs {
+      display: flex; gap: 8px; margin-bottom: 24px;
+    }
+    .mode-tab {
+      flex: 1; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+      padding: 13px 20px; border-radius: 12px; border: 1.5px solid var(--border);
+      background: var(--surface); color: var(--muted); cursor: pointer;
+      transition: all 0.2s; letter-spacing: 0.3px; display: flex;
+      align-items: center; justify-content: center; gap: 8px;
+    }
+    .mode-tab:hover { border-color: rgba(245,166,35,0.4); color: var(--text); }
+    .mode-tab.active {
+      border-color: var(--accent); background: rgba(245,166,35,0.09);
+      color: var(--accent);
+    }
+
+    /* ── Vozilo red u grupi ───────────────────────────────── */
+    .vozilo-red {
+      display: grid; grid-template-columns: 1fr 80px 36px;
+      gap: 10px; align-items: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px;
+      animation: fadeUp 0.2s ease both;
+      transition: border-color 0.2s;
+    }
+    .vozilo-red:hover { border-color: rgba(245,166,35,0.25); }
+    .vozilo-red-select {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px; font-size: 14px;
+      color: var(--text); font-family: 'DM Sans', sans-serif;
+      outline: none; cursor: pointer; width: 100%;
+      transition: border-color 0.2s;
+    }
+    .vozilo-red-select:focus { border-color: var(--accent); }
+    .vozilo-red-kol {
+      background: var(--card) !important; border: 1px solid var(--border) !important;
+      border-radius: 8px !important; padding: 10px 12px !important;
+      font-size: 16px !important; font-family: 'Syne', sans-serif !important;
+      font-weight: 700 !important; text-align: center !important; width: 100%;
+    }
+    .vozilo-red-kol:focus { border-color: var(--accent) !important; }
+
+    /* ── Grupa tip badges ─────────────────────────────────── */
+    .grupa-tipovi {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .grupa-tip {
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+      padding: 7px 14px; border-radius: 100px; cursor: pointer;
+      border: 1.5px solid var(--border); background: var(--surface);
+      color: var(--muted); transition: all 0.15s; white-space: nowrap;
+    }
+    .grupa-tip:hover { border-color: rgba(245,166,35,0.4); color: var(--text); }
+    .grupa-tip.active { border-color: var(--accent); background: rgba(245,166,35,0.1); color: var(--accent); }
+
+    /* ── Član grupe red ───────────────────────────────────── */
+    .clan-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .clan-row {
+      display: grid; grid-template-columns: 28px 1fr 1fr 140px 36px;
+      gap: 10px; align-items: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 16px;
+      animation: fadeUp 0.25s ease both;
+    }
+    .clan-row:hover { border-color: rgba(245,166,35,0.2); }
+    .clan-num {
+      font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+      color: var(--accent); text-align: center;
+    }
+    .clan-input {
+      background: var(--card) !important; border: 1px solid var(--border) !important;
+      border-radius: 8px !important; padding: 9px 12px !important;
+      font-size: 13px !important;
+    }
+    .clan-vozilo-select {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 12px; font-size: 13px;
+      color: var(--text); font-family: 'DM Sans', sans-serif;
+      outline: none; cursor: pointer; width: 100%;
+      transition: border-color 0.2s;
+    }
+    .clan-vozilo-select:focus { border-color: var(--accent); }
+    .btn-ukloni-clan {
+      background: rgba(232,83,74,0.1); border: 1px solid rgba(232,83,74,0.25);
+      border-radius: 8px; color: var(--accent2); cursor: pointer;
+      font-size: 16px; width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    .btn-ukloni-clan:hover { background: rgba(232,83,74,0.2); }
+    .btn-dodaj-clana {
+      font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+      padding: 10px 18px; border-radius: 10px; border: 1.5px dashed var(--border);
+      background: transparent; color: var(--muted); cursor: pointer;
+      transition: all 0.2s; letter-spacing: 0.3px; width: 100%;
+    }
+    .btn-dodaj-clana:hover { border-color: var(--accent); color: var(--accent); background: rgba(245,166,35,0.04); }
+
+    /* ── Grupa summary box ────────────────────────────────── */
+    .grupa-summary {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; margin-top: 12px;
+      font-size: 13px; color: var(--muted);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    }
+    .grupa-summary strong { color: var(--accent); font-family: 'Syne', sans-serif; font-size: 15px; }
+
+    .section-title {
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
+      margin-bottom: 24px; display: flex; align-items: center; gap: 10px;
+    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ── Grid ───────────────────────────────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    /* ── Fields ─────────────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 8px; }
+
+    .field-label {
+      font-size: 12px; font-weight: 500; color: var(--muted);
+      letter-spacing: 0.5px; text-transform: uppercase;
+    }
+
+    input[type="text"], input[type="number"], textarea {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 15px;
+      padding: 12px 16px; width: 100%;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none; appearance: none;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245,166,35,0.12);
+    }
+
+    input.error, textarea.error {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 3px rgba(232,83,74,0.12);
+    }
+
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+    input[type="number"]::-webkit-inner-spin-button { opacity: 0; }
+
+    /* ── Vozilo tiles ─────────────────────────────────────────── */
+    .vozilo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+    }
+
+    .vozilo-tile { position: relative; cursor: pointer; }
+    .vozilo-tile input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+
+    .vozilo-tile-inner {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 5px;
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 16px 8px 12px; text-align: center;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s, box-shadow 0.2s;
+      user-select: none;
+    }
+
+    .vozilo-tile:hover .vozilo-tile-inner { border-color: rgba(245,166,35,0.45); background: rgba(245,166,35,0.04); }
+
+    .vozilo-tile input:checked + .vozilo-tile-inner {
+      border-color: var(--accent); background: rgba(245,166,35,0.09);
+      transform: translateY(-2px); box-shadow: 0 6px 18px rgba(245,166,35,0.15);
+    }
+
+    .vozilo-icon { font-size: 24px; line-height: 1; }
+    .vozilo-name { font-size: 12px; font-weight: 700; color: var(--text); font-family: 'Syne', sans-serif; }
+    .vozilo-price { font-size: 11px; color: var(--accent); font-weight: 700; }
+
+    /* ── Checkboxes ─────────────────────────────────────────── */
+    .checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 10px; }
+
+    .checkbox-item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s; user-select: none;
+    }
+
+    .checkbox-item:hover { border-color: rgba(245,166,35,0.4); background: rgba(245,166,35,0.04); }
+
+    .checkbox-item input[type="checkbox"] {
+      appearance: none; width: 18px; height: 18px; min-width: 18px;
+      border: 1.5px solid var(--border); border-radius: 5px;
+      background: transparent; cursor: pointer; transition: all 0.2s; position: relative;
+    }
+
+    .checkbox-item input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+    .checkbox-item input[type="checkbox"]:checked::after {
+      content: ''; display: block; position: absolute;
+      top: 2px; left: 5px; width: 5px; height: 9px;
+      border: 2px solid #000; border-top: none; border-left: none; transform: rotate(45deg);
+    }
+
+    .checkbox-item.checked { border-color: var(--accent); background: rgba(245,166,35,0.06); }
+    .checkbox-label { font-size: 13px; font-weight: 500; color: var(--text); }
+    .checkbox-price { margin-left: auto; font-size: 11px; color: var(--accent); font-weight: 600; white-space: nowrap; }
+
+    /* ── Toggles ─────────────────────────────────────────────── */
+    .toggle-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .toggle { position: relative; width: 48px; height: 26px; cursor: pointer; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 100px; transition: background 0.3s; }
+    .toggle input:checked + .toggle-track { background: var(--accent); }
+    .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform 0.3s; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(22px); }
+    .toggle-label { font-size: 14px; color: var(--text); font-weight: 500; }
+    .toggle-sub { font-size: 12px; color: var(--accent); font-weight: 600; }
+    .toggle-group { display: flex; align-items: center; gap: 10px; }
+
+    .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+    /* ── Price display ─────────────────────────────────────── */
+    .price-display {
+      background: linear-gradient(135deg, rgba(245,166,35,0.09) 0%, rgba(91,156,246,0.05) 100%);
+      border: 1px solid rgba(245,166,35,0.22);
+      border-radius: var(--radius); padding: 28px 32px; margin-bottom: 20px;
+    }
+
+    .price-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+
+    .price-label { font-family: 'Syne', sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+
+    .price-value { font-family: 'Syne', sans-serif; font-size: clamp(2.6rem, 7vw, 4.2rem); font-weight: 800; line-height: 1; letter-spacing: -0.04em; color: var(--text); }
+    .price-value .currency { font-size: 0.42em; color: var(--accent); font-weight: 700; vertical-align: super; margin-right: 4px; }
+
+    .price-per-day { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+    .price-breakdown { text-align: right; }
+    .breakdown-item { font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+    .breakdown-item span { color: var(--text); font-weight: 500; }
+
+    /* ── BAM strip ──────────────────────────────────────────── */
+    .bam-strip {
+      display: none; margin-top: 22px; padding-top: 20px;
+      border-top: 1px solid rgba(91,156,246,0.2);
+      align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+    .bam-strip.visible { display: flex; }
+
+    .bam-icon { width: 40px; height: 40px; background: rgba(91,156,246,0.12); border: 1px solid rgba(91,156,246,0.25); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .bam-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; font-family: 'Syne', sans-serif; margin-bottom: 3px; }
+    .bam-value { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--bam); letter-spacing: -0.03em; }
+    .bam-value .bam-cur { font-size: 0.48em; font-weight: 700; vertical-align: super; margin-right: 3px; opacity: 0.8; }
+    .bam-rate { margin-left: auto; font-size: 11px; color: var(--muted); background: rgba(91,156,246,0.08); border: 1px solid rgba(91,156,246,0.18); padding: 5px 12px; border-radius: 100px; }
+
+    /* ── Plaćanje sekcija ───────────────────────────────────── */
+    .payment-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 32px; margin-bottom: 20px;
+      display: none;
+    }
+    .payment-card.visible { display: block; }
+
+    .payment-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 600px) { .payment-grid { grid-template-columns: 1fr; } }
+
+    .payment-box {
+      border-radius: 12px; padding: 18px 20px; text-align: center;
+    }
+
+    .payment-box.total   { background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.2); }
+    .payment-box.paid    { background: rgba(62,207,142,0.08); border: 1px solid rgba(62,207,142,0.2); }
+    .payment-box.remain  { background: rgba(232,83,74,0.08);  border: 1px solid rgba(232,83,74,0.2);  }
+
+    .payment-box-label { font-size: 10px; font-family: 'Syne', sans-serif; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .payment-box.total  .payment-box-label { color: var(--accent); }
+    .payment-box.paid   .payment-box-label { color: var(--success); }
+    .payment-box.remain .payment-box-label { color: var(--accent2); }
+
+    .payment-box-amount { font-family: 'Syne', sans-serif; font-size: 1.7rem; font-weight: 800; letter-spacing: -0.03em; }
+    .payment-box.total  .payment-box-amount { color: var(--accent); }
+    .payment-box.paid   .payment-box-amount { color: var(--success); }
+    .payment-box.remain .payment-box-amount { color: var(--accent2); }
+
+    .payment-box-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* Progres bar */
+    .progress-wrap { margin-top: 16px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .progress-bar { height: 8px; background: var(--border); border-radius: 100px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--success), #2db87a); border-radius: 100px; transition: width 0.5s ease; width: 0%; }
+
+    /* Unos uplate */
+    .uplata-row { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
+    .uplata-row .field { flex: 1; min-width: 200px; }
+
+    .btn-uplata {
+      font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+      padding: 12px 22px; border-radius: 10px; border: none; cursor: pointer;
+      background: var(--success); color: #000;
+      transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
+      letter-spacing: 0.3px; text-transform: uppercase;
+    }
+    .btn-uplata:hover { background: #4de0a0; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(62,207,142,0.25); }
+    .btn-uplata:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* Historija uplata */
+    .uplata-history { margin-top: 18px; }
+    .uplata-history-title { font-size: 11px; font-family: 'Syne', sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+
+    .uplata-item {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
+      animation: fadeUp 0.3s ease;
+    }
+
+    .uplata-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+    .uplata-iznos { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--success); }
+    .uplata-bam { font-size: 12px; color: var(--bam); margin-left: 4px; }
+    .uplata-komentar { font-size: 13px; color: var(--muted); font-style: italic; margin-left: auto; }
+    .uplata-time { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 5px 12px; border-radius: 100px; margin-bottom: 20px;
+    }
+    .status-badge.placeno   { background: rgba(62,207,142,0.15); border: 1px solid rgba(62,207,142,0.3); color: var(--success); }
+    .status-badge.djelimicno { background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.3); color: var(--accent); }
+    .status-badge.neplaceno { background: rgba(232,83,74,0.12); border: 1px solid rgba(232,83,74,0.3); color: var(--accent2); }
+
+    /* ── Komentar ────────────────────────────────────────────── */
+    .komentar-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 20px; }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 480px) { .btn-row { grid-template-columns: 1fr; } }
+
+    .btn {
+      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+      letter-spacing: 0.5px; padding: 16px 28px; border-radius: 10px;
+      border: none; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      text-transform: uppercase;
+    }
+
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: #fbb740; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(245,166,35,0.28); }
+    .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0) !important; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.3); border-top-color: #000; border-radius: 50%; animation: spin 0.6s linear infinite; display: none; }
+    .btn.loading .spinner { display: block; }
+    .btn.loading .btn-icon { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Notif ──────────────────────────────────────────────── */
+    .notif {
+      position: fixed; bottom: 30px; right: 30px;
+      background: var(--success); color: #000;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
+      padding: 14px 22px; border-radius: 10px;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 100; box-shadow: 0 8px 30px rgba(62,207,142,0.3);
+      max-width: 320px;
+    }
+    .notif.show { transform: translateY(0); opacity: 1; }
+    .notif.error { background: var(--accent2); color: #fff; box-shadow: 0 8px 30px rgba(232,83,74,0.3); }
+
+    .err-msg { font-size: 11px; color: var(--accent2); margin-top: 4px; display: none; }
+    .field.has-error .err-msg { display: block; }
+    .vozilo-err-msg { font-size: 11px; color: var(--accent2); margin-top: 8px; display: none; }
+    .vozilo-err-msg.show { display: block; }
+    .vozilo-grid.error-ring { outline: 2px solid var(--accent2); outline-offset: 6px; border-radius: 14px; }
+
+    /* ── Leaderboard trigger ────────────────────────────────── */
+    .lb-trigger {
+      position: fixed; top: 20px; right: 20px; z-index: 200;
+      display: flex; align-items: center; gap: 8px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
+      padding: 10px 18px; border-radius: 100px; cursor: pointer;
+      transition: all 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .lb-trigger:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(245,166,35,0.15); }
+    .lb-trigger svg { stroke: currentColor; }
+
+    .lb-count {
+      background: var(--accent); color: #000;
+      font-size: 11px; font-weight: 800;
+      width: 20px; height: 20px; border-radius: 50%;
+      display: flex !important; align-items: center; justify-content: center;
+    }
+
+    /* ── Overlay ─────────────────────────────────────────────── */
+    .lb-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      z-index: 300; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+      backdrop-filter: blur(3px);
+    }
+    .lb-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* ── Panel ───────────────────────────────────────────────── */
+    .lb-panel {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: min(92vw, 1000px);
+      background: var(--card); border-left: 1px solid var(--border);
+      z-index: 400; display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: -8px 0 40px rgba(0,0,0,0.4);
+    }
+    .lb-panel.open { transform: translateX(0); }
+
+    .lb-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 28px; border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .lb-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+    .lb-subtitle { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+    .lb-close {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); font-size: 16px; width: 36px; height: 36px;
+      border-radius: 8px; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .lb-close:hover { color: var(--text); border-color: var(--accent); }
+
+    /* ── Summary kartice ─────────────────────────────────────── */
+    .lb-summary {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      padding: 20px 28px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+
+    @media (max-width: 600px) { .lb-summary { grid-template-columns: 1fr 1fr; } }
+
+    .lb-sum-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; text-align: center;
+    }
+    .lb-sum-box.eur   { border-color: rgba(245,166,35,0.25); background: rgba(245,166,35,0.06); }
+    .lb-sum-box.green { border-color: rgba(62,207,142,0.25); background: rgba(62,207,142,0.06); }
+    .lb-sum-box.red   { border-color: rgba(232,83,74,0.25);  background: rgba(232,83,74,0.06);  }
+
+    .lb-sum-label { font-size: 10px; font-family: 'Syne', sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .lb-sum-val   { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--text); }
+    .lb-sum-box.eur   .lb-sum-val { color: var(--accent); }
+    .lb-sum-box.green .lb-sum-val { color: var(--success); }
+    .lb-sum-box.red   .lb-sum-val { color: var(--accent2); }
+
+    /* ── Table ───────────────────────────────────────────────── */
+    .lb-table-wrap {
+      flex: 1; overflow: auto; padding: 20px 28px;
+    }
+
+    .lb-loading, .lb-empty {
+      text-align: center; padding: 60px 20px;
+      color: var(--muted); font-size: 15px;
+    }
+
+    .lb-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+      min-width: 800px;
+    }
+
+    .lb-table thead tr {
+      background: var(--surface);
+    }
+
+    .lb-table th {
+      font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent);
+      padding: 12px 14px; text-align: left; white-space: nowrap;
+      border-bottom: 2px solid rgba(245,166,35,0.2);
+      position: sticky; top: 0; background: var(--surface); z-index: 1;
+    }
+
+    .lb-table td {
+      padding: 11px 14px; border-bottom: 1px solid var(--border);
+      color: var(--text); vertical-align: middle;
+    }
+
+    .lb-table tbody tr:hover td { background: rgba(245,166,35,0.04); }
+    .lb-table tbody tr:last-child td { border-bottom: none; }
+
+    .lb-table tfoot td {
+      padding: 12px 14px; font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 12px;
+      border-top: 2px solid var(--border); background: var(--surface);
+      position: sticky; bottom: 0;
+    }
+
+    /* Kolone */
+    .lb-rb  { color: var(--muted); font-size: 11px; width: 30px; }
+    .lb-ime { font-weight: 600; }
+    .lb-tab { font-family: 'Syne', sans-serif; font-size: 11px; color: var(--muted); }
+    .lb-eur { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--accent); }
+    .lb-placeno { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--success); }
+    .lb-ostatak { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--accent2); }
+    .lb-kom { font-size: 11px; color: var(--muted); font-style: italic; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lb-ts  { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+    .lb-status {
+      display: inline-block; padding: 3px 10px; border-radius: 100px;
+      font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+      white-space: nowrap;
+    }
+    .lb-status.placeno    { background: rgba(62,207,142,0.15); color: var(--success); }
+    .lb-status.djelimicno { background: rgba(245,166,35,0.15); color: var(--accent); }
+    .lb-status.neplaceno  { background: rgba(232,83,74,0.15);  color: var(--accent2); }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    .lb-footer {
+      padding: 16px 28px; border-top: 1px solid var(--border);
+      flex-shrink: 0; display: flex; align-items: center; gap: 12px;
+    }
+
+    .lb-refresh {
+      font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+      padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); cursor: pointer;
+      transition: all 0.2s; letter-spacing: 0.3px;
+    }
+    .lb-refresh:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Search + Filteri ────────────────────────────────── */
+    .lb-search-wrap {
+      padding: 10px 16px 12px; border-bottom: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 10px; flex-shrink: 0;
+    }
+    .lb-search-box {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0 12px; transition: border-color 0.2s;
+    }
+    .lb-search-box:focus-within { border-color: var(--accent); }
+    .lb-search-icon { font-size: 14px; color: var(--muted); flex-shrink: 0; }
+    .lb-search-input {
+      flex: 1; background: none; border: none; outline: none;
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+      padding: 10px 0;
+    }
+    .lb-search-input::placeholder { color: var(--muted); }
+    .lb-search-clear {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: 13px; padding: 4px; transition: color 0.2s;
+    }
+    .lb-search-clear:hover { color: var(--accent2); }
+    .lb-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+    .lb-filter-btn {
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+      padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); cursor: pointer;
+      transition: all 0.15s; letter-spacing: 0.3px; white-space: nowrap;
+    }
+    .lb-filter-btn.active      { background: rgba(245,166,35,0.15); border-color: var(--accent); color: var(--accent); }
+    .lb-filter-btn.green.active{ background: rgba(62,207,142,0.15); border-color: var(--success); color: var(--success); }
+    .lb-filter-btn.orange.active{ background: rgba(245,166,35,0.15); border-color: var(--accent); color: var(--accent); }
+    .lb-filter-btn.red.active  { background: rgba(232,83,74,0.15);  border-color: var(--accent2); color: var(--accent2); }
+    .lb-filter-btn:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+
+    /* ── Tablice inline edit ────────────────────────────── */
+    .tablice-missing { color: var(--accent2); font-style: italic; font-size: 11px; cursor: pointer; }
+    .tablice-missing:hover { text-decoration: underline; }
+
+    /* ── Navigacija po danima ───────────────────────────────── */
+    .lb-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 28px; border-bottom: 1px solid var(--border);
+      flex-shrink: 0; gap: 12px;
+    }
+    .lb-nav-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); font-size: 18px; width: 36px; height: 36px;
+      border-radius: 8px; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 700;
+    }
+    .lb-nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .lb-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .lb-nav-datum {
+      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+      color: var(--accent); flex: 1; text-align: center;
+    }
+    .lb-nav-today {
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+      padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(245,166,35,0.3);
+      background: rgba(245,166,35,0.08); color: var(--accent); cursor: pointer;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .lb-nav-today:hover { background: rgba(245,166,35,0.16); }
+
+    /* ── Akcijska dugmad u tabeli ───────────────────────────── */
+    .lb-actions { display: flex; gap: 6px; }
+    .btn-action {
+      font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+      padding: 4px 10px; border-radius: 6px; border: none; cursor: pointer;
+      transition: all 0.15s; white-space: nowrap; letter-spacing: 0.3px;
+    }
+    .btn-action.uplata   { background: rgba(62,207,142,0.15); color: var(--success); border: 1px solid rgba(62,207,142,0.3); }
+    .btn-action.uplata:hover   { background: rgba(62,207,142,0.28); }
+    .btn-action.produzenje { background: rgba(245,166,35,0.12); color: var(--accent); border: 1px solid rgba(245,166,35,0.3); }
+    .btn-action.produzenje:hover { background: rgba(245,166,35,0.24); }
+
+    /* ── Modal ───────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+      z-index: 600; opacity: 0; pointer-events: none;
+      transition: opacity 0.25s; backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 32px; width: min(94vw, 440px);
+      transform: scale(0.94) translateY(12px);
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
+      margin-bottom: 6px; color: var(--text);
+    }
+    .modal-sub {
+      font-size: 12px; color: var(--muted); margin-bottom: 24px; line-height: 1.5;
+    }
+    .modal-field { margin-bottom: 18px; }
+    .modal-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; display: block; }
+    .modal-input {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 15px; padding: 11px 15px; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .modal-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(245,166,35,0.12); }
+    .modal-btns { display: flex; gap: 10px; margin-top: 24px; }
+    .modal-btn {
+      flex: 1; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+      padding: 12px; border-radius: 10px; border: none; cursor: pointer;
+      transition: all 0.2s; letter-spacing: 0.3px; text-transform: uppercase;
+    }
+    .modal-btn.confirm { background: var(--accent); color: #000; }
+    .modal-btn.confirm:hover { background: #fbb740; }
+    .modal-btn.confirm.green { background: var(--success); }
+    .modal-btn.confirm.green:hover { background: #4de0a0; }
+    .modal-btn.cancel { background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+    .modal-btn.cancel:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    .btn-action.racun  { background: rgba(91,156,246,0.12); color: var(--blue); border: 1px solid rgba(91,156,246,0.3); font-size: 13px; }
+    .btn-action.racun:hover { background: rgba(91,156,246,0.25); }
+    .btn-action.obrisi    { background: rgba(232,83,74,0.12); color: var(--accent2); border: 1px solid rgba(232,83,74,0.3); }
+    .btn-action.obrisi:hover { background: rgba(232,83,74,0.28); }
+
+    /* ── Confirm modal (brisanje) ───────────────────────────── */
+    .modal-warn {
+      background: rgba(232,83,74,0.1); border: 1px solid rgba(232,83,74,0.25);
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
+      font-size: 13px; color: var(--accent2); line-height: 1.5;
+    }
+
+    /* ── Dugme očisti tabelu ────────────────────────────────── */
+    .lb-ocisti {
+      font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+      padding: 9px 18px; border-radius: 8px; border: 1px solid rgba(232,83,74,0.3);
+      background: rgba(232,83,74,0.08); color: var(--accent2); cursor: pointer;
+      transition: all 0.2s; letter-spacing: 0.3px; margin-left: auto;
+    }
+    .lb-ocisti:hover { background: rgba(232,83,74,0.2); border-color: var(--accent2); }
+
+    /* ── Animations ─────────────────────────────────────────── */
+    .card, .payment-card, .komentar-card, .price-display, .btn-row { animation: fadeUp 0.45s ease both; }
+    .card:nth-child(2) { animation-delay: 0.06s; }
+    .card:nth-child(3) { animation-delay: 0.12s; }
+    .card:nth-child(4) { animation-delay: 0.18s; }
+    .price-display     { animation-delay: 0.24s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<!-- ── Leaderboard dugme gore desno ─────────────────────── -->
+<button class="lb-trigger" id="lb-trigger" onclick="otvoriLeaderboard()" title="Pregled danas">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+    <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+  </svg>
+  <span>Pregled</span>
+  <span class="lb-count" id="lb-count" style="display:none">0</span>
+</button>
+
+<button class="lb-trigger" id="cj-trigger" onclick="otvoriCijenovnik()" title="Cijenovnik" style="right:auto;left:24px;">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+  </svg>
+  <span>Cijenovnik</span>
+</button>
+
+<button class="lb-trigger" id="st-trigger" onclick="otvoriStatistiku()" title="Statistika" style="right:auto;left:168px;">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+  </svg>
+  <span>Statistika</span>
+</button>
+
+<!-- ── Leaderboard overlay ────────────────────────────────── -->
+<div class="lb-overlay" id="lb-overlay" onclick="zatvoriLeaderboard()"></div>
+
+<!-- ── Leaderboard panel ──────────────────────────────────── -->
+<div class="lb-panel" id="lb-panel">
+  <div class="lb-header">
+    <div>
+      <div class="lb-title">📊 Pregled — Danas</div>
+      <div class="lb-subtitle" id="lb-datum">Učitavanje...</div>
+    </div>
+    <button class="lb-close" onclick="zatvoriLeaderboard()">✕</button>
+  </div>
+
+  <!-- Navigacija po danima -->
+  <div class="lb-nav">
+    <button class="lb-nav-btn" id="lb-prev" onclick="navigirajDan(-1)" title="Prethodni dan">‹</button>
+    <div class="lb-nav-datum" id="lb-nav-datum">Danas</div>
+    <button class="lb-nav-btn" id="lb-next" onclick="navigirajDan(+1)" title="Sljedeći dan">›</button>
+    <button class="lb-nav-today" onclick="idiNaDanas()">📅 Danas</button>
+  </div>
+
+  <!-- Tražilica + Filteri -->
+  <div class="lb-search-wrap">
+    <div class="lb-search-box">
+      <span class="lb-search-icon">🔍</span>
+      <input class="lb-search-input" id="lb-search" type="text" placeholder="Traži po imenu, državi, tablicama..." oninput="onSearch()"/>
+      <button class="lb-search-clear" id="lb-search-clear" onclick="clearSearch()" style="display:none">✕</button>
+    </div>
+    <div class="lb-filters">
+      <button class="lb-filter-btn active" id="f-svi"        onclick="setFilter('svi')">Svi</button>
+      <button class="lb-filter-btn green"  id="f-placeno"    onclick="setFilter('placeno')">✅ Plaćeno</button>
+      <button class="lb-filter-btn orange" id="f-djelimicno" onclick="setFilter('djelimicno')">◑ Djelimično</button>
+      <button class="lb-filter-btn red"    id="f-neplaceno"  onclick="setFilter('neplaceno')">✕ Nije</button>
+    </div>
+  </div>
+
+  <!-- Summary kartice -->
+  <div class="lb-summary" id="lb-summary">
+    <div class="lb-sum-box">
+      <div class="lb-sum-label">Turista</div>
+      <div class="lb-sum-val" id="lb-s-turista">—</div>
+    </div>
+    <div class="lb-sum-box eur">
+      <div class="lb-sum-label">Ukupno</div>
+      <div class="lb-sum-val" id="lb-s-eur">—</div>
+    </div>
+    <div class="lb-sum-box green">
+      <div class="lb-sum-label">Naplaćeno</div>
+      <div class="lb-sum-val" id="lb-s-placeno">—</div>
+    </div>
+    <div class="lb-sum-box red">
+      <div class="lb-sum-label">Ostatak</div>
+      <div class="lb-sum-val" id="lb-s-ostatak">—</div>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="lb-table-wrap" id="lb-table-wrap">
+    <div class="lb-loading" id="lb-loading">⏳ Učitavam podatke...</div>
+    <div class="lb-empty" id="lb-empty" style="display:none">
+      📭 Nema unesenih podataka za danas.
+    </div>
+    <table class="lb-table" id="lb-table" style="display:none">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ime</th>
+          <th>Tablice</th>
+          <th>Vozilo</th>
+          <th>Dana</th>
+          <th>Ukupno</th>
+          <th>Plaćeno</th>
+          <th>Ostatak</th>
+          <th>Status</th>
+          <th>Akcije</th>
+          <th>Komentar</th>
+          <th>Vrijeme</th>
+        </tr>
+      </thead>
+      <tbody id="lb-tbody"></tbody>
+      <tfoot id="lb-tfoot"></tfoot>
+    </table>
+  </div>
+
+  <div class="lb-footer">
+    <button class="lb-refresh" onclick="ucitajPodatke()">🔄 Osvježi</button>
+    <button class="lb-ocisti" onclick="otvoriModalOcisti()">🗑️ Očisti tabelu</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <header>
+    <div class="badge">⛺ Camping &amp; Travel — Kalkulator</div>
+    <h1>EVIDENCIJA</h1>
+    <p class="subtitle">Unesite podatke, odaberite vozilo i odmah dobijte cijenu u eurima<br/>s konverzijom u bosanske marke.</p>
+  </header>
+
+  <!-- ── Mode tabs ─────────────────────────────────────────── -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tab-individualni" onclick="setMode('individualni')">
+      👤 Individualni gost
+    </button>
+    <button class="mode-tab" id="tab-grupa" onclick="setMode('grupa')">
+      👥 Grupa
+    </button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       INDIVIDUALNI MODE
+  ═══════════════════════════════════════════════════════════ -->
+  <div id="mode-individualni">
+  <div class="card">
+    <div class="section-title">01 — Lični podaci</div>
+    <div class="grid-2">
+      <div class="field" id="f-ime">
+        <label class="field-label" for="ime">Ime i Prezime</label>
+        <input type="text" id="ime" placeholder="npr. Muamer Hasić"/>
+        <span class="err-msg">Polje je obavezno (min 2 znaka).</span>
+      </div>
+      <div class="field" id="f-drzava">
+        <label class="field-label" for="drzava">Država</label>
+        <input type="text" id="drzava" placeholder="npr. Bosna i Hercegovina"/>
+        <span class="err-msg">Unesite naziv države.</span>
+      </div>
+      <div class="field" id="f-tablice">
+        <label class="field-label" for="tablice">Tablice Auta <span style="color:var(--muted);font-weight:400;font-size:11px">(opcionalno)</span></label>
+        <input type="text" id="tablice" placeholder="npr. 127-A-123 (može se unijeti naknadno)" maxlength="15"/>
+      </div>
+      <div class="field" id="f-dani">
+        <label class="field-label" for="dani">Broj Dana</label>
+        <input type="number" id="dani" placeholder="1" min="1" max="365"/>
+        <span class="err-msg">Unesite broj dana (min 1).</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 ── Vrsta vozila ──────────────────────────────── -->
+  <div class="card">
+    <div class="section-title">02 — Vrsta Vozila</div>
+    <div class="vozilo-grid" id="vozilo-grid">
+      <label class="vozilo-tile"><input type="radio" name="vozilo" value="auto"/>
+        <div class="vozilo-tile-inner"><span class="vozilo-icon">🚗</span><span class="vozilo-name">Auto</span><span class="vozilo-price">5 €/dan</span></div>
+      </label>
+      <label class="vozilo-tile"><input type="radio" name="vozilo" value="motor"/>
+        <div class="vozilo-tile-inner"><span class="vozilo-icon">🏍️</span><span class="vozilo-name">Motor</span><span class="vozilo-price">3 €/dan</span></div>
+      </label>
+      <label class="vozilo-tile"><input type="radio" name="vozilo" value="auto_sator"/>
+        <div class="vozilo-tile-inner"><span class="vozilo-icon">⛺</span><span class="vozilo-name">Auto + Šator</span><span class="vozilo-price">10 €/dan</span></div>
+      </label>
+      <label class="vozilo-tile"><input type="radio" name="vozilo" value="van"/>
+        <div class="vozilo-tile-inner"><span class="vozilo-icon">🚐</span><span class="vozilo-name">Van</span><span class="vozilo-price">15 €/dan</span></div>
+      </label>
+      <label class="vozilo-tile"><input type="radio" name="vozilo" value="van_l"/>
+        <div class="vozilo-tile-inner"><span class="vozilo-icon">🚌</span><span class="vozilo-name">Van L</span><span class="vozilo-price">15 €/dan</span></div>
+      </label>
+      <label class="vozilo-tile"><input type="radio" name="vozilo" value="auto_karavan"/>
+        <div class="vozilo-tile-inner"><span class="vozilo-icon">🏕️</span><span class="vozilo-name">Auto + Karavan</span><span class="vozilo-price">20 €/dan</span></div>
+      </label>
+      <label class="vozilo-tile"><input type="radio" name="vozilo" value="motohome"/>
+        <div class="vozilo-tile-inner"><span class="vozilo-icon">🏠</span><span class="vozilo-name">Motohome</span><span class="vozilo-price">20 €/dan</span></div>
+      </label>
+    </div>
+    <div class="vozilo-err-msg" id="vozilo-err">⚠️ Odaberi vrstu vozila.</div>
+  </div>
+
+  <!-- 03 ── Putnici & Dodaci ──────────────────────────── -->
+  <div class="card">
+    <div class="section-title">03 — Putnici &amp; Dodaci</div>
+    <div class="grid-3">
+      <div class="field" id="f-osobe">
+        <label class="field-label" for="osobe">Broj Osoba <span style="color:var(--muted);text-transform:none;letter-spacing:0">(+5 €)</span></label>
+        <input type="number" id="osobe" placeholder="0" min="0" max="99"/>
+        <span class="err-msg">Unesite broj ≥ 0.</span>
+      </div>
+      <div class="field" id="f-djeca">
+        <label class="field-label" for="djeca">Broj Djece <span style="color:var(--muted);text-transform:none;letter-spacing:0">(+2.5 €)</span></label>
+        <input type="number" id="djeca" placeholder="0" min="0" max="20"/>
+        <span class="err-msg">Unesite broj ≥ 0.</span>
+      </div>
+      <div class="field"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="toggle-row">
+      <div class="toggle-group">
+        <label class="toggle">
+          <input type="checkbox" id="pas"/>
+          <div class="toggle-track"></div><div class="toggle-thumb"></div>
+        </label>
+        <div><div class="toggle-label">🐕 Pas</div><div class="toggle-sub">+2 €/dan</div></div>
+      </div>
+      <div class="toggle-group" style="margin-left:24px;">
+        <label class="toggle">
+          <input type="checkbox" id="sator"/>
+          <div class="toggle-track"></div><div class="toggle-thumb"></div>
+        </label>
+        <div><div class="toggle-label">⛺ Šator</div><div class="toggle-sub">+5 €/dan</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Price box ──────────────────────────────────────── -->
+  <div class="price-display">
+    <div class="price-top">
+      <div>
+        <div class="price-label">Ukupna cijena</div>
+        <div class="price-value"><span class="currency">€</span><span id="cijena-num">0.00</span></div>
+        <div class="price-per-day" id="cijena-perday">Unesite podatke i kliknite "Izračunaj"</div>
+      </div>
+      <div class="price-breakdown" id="breakdown" style="display:none;">
+        <div class="breakdown-item">Vozilo: <span id="br-vozilo">—</span></div>
+        <div class="breakdown-item">Putnici: <span id="br-putnici">—</span></div>
+        <div class="breakdown-item">Pas: <span id="br-pas">—</span></div>
+        <div class="breakdown-item">Šator: <span id="br-sator">—</span></div>
+      </div>
+    </div>
+    <div class="bam-strip" id="bam-strip">
+      <div class="bam-icon">🏦</div>
+      <div>
+        <div class="bam-label">Protuvrijednost u KM</div>
+        <div class="bam-value"><span class="bam-cur">KM</span><span id="bam-num">0.00</span></div>
+      </div>
+      <div class="bam-rate">1 € = 1.95583 KM (fiksni kurs)</div>
+    </div>
+  </div>
+
+  <!-- ── Plaćanje ───────────────────────────────────────── -->
+  <div class="payment-card" id="payment-card">
+    <div class="section-title">💳 Evidencija Plaćanja</div>
+
+    <!-- Status badge -->
+    <div class="status-badge neplaceno" id="status-badge">⏳ Nije plaćeno</div>
+
+    <!-- Boxes -->
+    <div class="payment-grid">
+      <div class="payment-box total">
+        <div class="payment-box-label">Ukupno za platiti</div>
+        <div class="payment-box-amount">€<span id="pay-total">0.00</span></div>
+        <div class="payment-box-sub" id="pay-total-bam">KM 0.00</div>
+      </div>
+      <div class="payment-box paid">
+        <div class="payment-box-label">Plaćeno</div>
+        <div class="payment-box-amount">€<span id="pay-paid">0.00</span></div>
+        <div class="payment-box-sub" id="pay-paid-bam">KM 0.00</div>
+      </div>
+      <div class="payment-box remain">
+        <div class="payment-box-label">Ostatak</div>
+        <div class="payment-box-amount">€<span id="pay-remain">0.00</span></div>
+        <div class="payment-box-sub" id="pay-remain-bam">KM 0.00</div>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Napredak plaćanja</span>
+        <span id="pay-pct">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="pay-bar"></div></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Unos uplate -->
+    <div class="uplata-row">
+      <div class="field" style="flex:1;min-width:160px;">
+        <label class="field-label" for="uplata-iznos">Iznos uplate (€)</label>
+        <input type="number" id="uplata-iznos" placeholder="0.00" min="0.01" step="0.01"/>
+      </div>
+      <div class="field" style="flex:2;min-width:200px;">
+        <label class="field-label" for="uplata-napomena">Napomena (opcionalno)</label>
+        <input type="text" id="uplata-napomena" placeholder="npr. gotovina, kartica, prva rata..."/>
+      </div>
+      <button class="btn-uplata" onclick="dodajUplatu()">✅ Dodaj uplatu</button>
+    </div>
+
+    <!-- Historija uplata -->
+    <div class="uplata-history" id="uplata-history" style="display:none;">
+      <div class="uplata-history-title">Historija uplata</div>
+      <div id="uplata-lista"></div>
+    </div>
+  </div>
+
+  <!-- ── Komentar ───────────────────────────────────────── -->
+  <div class="komentar-card">
+    <div class="section-title">📝 Komentar</div>
+    <div class="field">
+      <label class="field-label" for="komentar">Bilješka / Napomena</label>
+      <textarea id="komentar" placeholder="npr. Turist dolazi sutra po potvrdu, plaća ostatak 27.4. Kontakt: +387 61 000 000..."></textarea>
+    </div>
+  </div>
+
+  <!-- ── Buttons ────────────────────────────────────────── -->
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="izracunaj()">
+      <span class="btn-icon">🧮</span><span>Izračunaj Cijenu</span>
+    </button>
+    <button class="btn btn-secondary" id="btn-salji" onclick="salji()" disabled>
+      <span class="btn-icon">📤</span>
+      <span class="spinner"></span>
+      <span id="btn-salji-text">Pošalji u Excel</span>
+    </button>
+  </div>
+
+</div> <!-- /mode-individualni -->
+
+<!-- ════════════════════════════════════════════════════════
+     GRUPA MODE
+═══════════════════════════════════════════════════════════ -->
+<div id="mode-grupa" style="display:none;">
+
+  <!-- G01 ── Podaci grupe ─────────────────────────────── -->
+  <div class="card">
+    <div class="section-title">G01 — Podaci Grupe</div>
+    <div class="grid-2">
+      <div class="field">
+        <label class="field-label" for="g-naziv">Naziv / Vodja grupe</label>
+        <input type="text" id="g-naziv" placeholder="npr. Moto Klub Sarajevo"/>
+      </div>
+      <div class="field">
+        <label class="field-label" for="g-drzava">Država</label>
+        <input type="text" id="g-drzava" placeholder="npr. Bosna i Hercegovina"/>
+      </div>
+      <div class="field">
+        <label class="field-label" for="g-dani">Broj Dana</label>
+        <input type="number" id="g-dani" placeholder="1" min="1" max="365"/>
+      </div>
+      <div class="field">
+        <label class="field-label">Tip grupe</label>
+        <div class="grupa-tipovi">
+          <button class="grupa-tip active" onclick="setGrupaTip(this,'motociklisti')">🏍️ Motociklisti</button>
+          <button class="grupa-tip" onclick="setGrupaTip(this,'izvidjaci')">⛺ Izviđači</button>
+          <button class="grupa-tip" onclick="setGrupaTip(this,'skola')">🎒 Škola</button>
+          <button class="grupa-tip" onclick="setGrupaTip(this,'sportasi')">🏅 Sportaši</button>
+          <button class="grupa-tip" onclick="setGrupaTip(this,'turisti')">🌍 Turisti</button>
+          <button class="grupa-tip" onclick="setGrupaTip(this,'ostalo')">👥 Ostalo</button>
+        </div>
+      </div>
+    </div>
+    <div class="field" style="margin-top:16px;">
+      <label class="field-label" for="g-komentar">Komentar / napomena</label>
+      <textarea id="g-komentar" placeholder="Dodatne napomene o grupi..."></textarea>
+    </div>
+  </div>
+
+  <!-- G02 ── Vozila u grupi ───────────────────────────── -->
+  <div class="card">
+    <div class="section-title">G02 — Vozila u Grupi</div>
+    <div id="vozila-lista" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+    <button class="btn-dodaj-clana" onclick="dodajVoziloRed()">+ Dodaj vrstu vozila</button>
+    <div class="grupa-summary" id="grupa-summary">
+      <span>Unesite vozila i broj dana</span>
+      <strong>0.00 €</strong>
+    </div>
+  </div>
+
+  <!-- G03 ── Opcije i plaćanje ────────────────────────── -->
+  <div class="card">
+    <div class="section-title">G03 — Osobe, Opcije & Plaćanje</div>
+
+    <!-- Osobe i djeca -->
+    <div class="grid-2" style="margin-bottom:20px;">
+      <div class="field">
+        <label class="field-label" for="g-osobe">Broj odraslih osoba</label>
+        <input type="number" id="g-osobe" placeholder="0" min="0" oninput="azurirajGrupaSummary()"/>
+      </div>
+      <div class="field">
+        <label class="field-label" for="g-djeca">Broj djece</label>
+        <input type="number" id="g-djeca" placeholder="0" min="0" oninput="azurirajGrupaSummary()"/>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Pas i Šator -->
+    <div class="toggle-row" style="margin-bottom:20px;">
+      <div class="toggle-group">
+        <label class="toggle"><input type="checkbox" id="g-pas"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        <div><div class="toggle-label">🐕 Pas</div><div class="toggle-sub" id="g-pas-sub">+2 €/dan</div></div>
+      </div>
+      <div class="toggle-group" style="margin-left:24px;">
+        <label class="toggle"><input type="checkbox" id="g-sator"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        <div><div class="toggle-label">⛺ Šator</div><div class="toggle-sub" id="g-sator-sub">+5 €/dan</div></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="uplata-row">
+      <div class="field" style="flex:1">
+        <label class="field-label" for="g-placeno">Plaćeno pri dolasku (€)</label>
+        <input type="number" id="g-placeno" placeholder="0.00" min="0" step="0.01"/>
+      </div>
+      <div class="field" style="flex:2">
+        <label class="field-label" for="g-placeno-nap">Napomena uplate</label>
+        <input type="text" id="g-placeno-nap" placeholder="npr. gotovina, prva rata..."/>
+      </div>
+    </div>
+  </div>
+
+  <!-- G04 ── Dugmad ───────────────────────────────────── -->
+  <div class="btn-row">
+    <button class="btn btn-secondary" id="btn-salji-grupu" onclick="saljiGrupu()">
+      <span class="btn-icon">📤</span>
+      <span class="spinner"></span>
+      <span id="btn-salji-grupu-text">Pošalji Grupu u Excel</span>
+    </button>
+  </div>
+
+</div> <!-- /mode-grupa -->
+
+<div class="notif" id="notif"></div>
+
+<!-- ── Modal: Dodaj uplatu ────────────────────────────────── -->
+<div class="modal-overlay" id="modal-uplata-overlay" onclick="zatvoriModal('uplata')">
+  <div class="modal" onclick="event.stopPropagation()" style="width:min(94vw,500px)">
+    <div class="modal-title">💳 Evidencija uplate</div>
+    <div class="modal-sub" id="modal-uplata-sub">Učitavanje...</div>
+
+    <!-- Trenutno stanje (učitava se iz Excela) -->
+    <div id="modal-stanje" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px;">
+      <div style="background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.2);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--accent);font-family:'Syne',sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Ukupno</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;color:var(--accent)" id="ms-ukupno">—</div>
+      </div>
+      <div style="background:rgba(62,207,142,0.08);border:1px solid rgba(62,207,142,0.2);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--success);font-family:'Syne',sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Plaćeno</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;color:var(--success)" id="ms-placeno">—</div>
+      </div>
+      <div style="background:rgba(232,83,74,0.08);border:1px solid rgba(232,83,74,0.2);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--accent2);font-family:'Syne',sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Ostatak</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;color:var(--accent2)" id="ms-ostatak">—</div>
+      </div>
+    </div>
+
+    <!-- Historija uplata -->
+    <div id="modal-historija-wrap" style="display:none;margin-bottom:16px;">
+      <div style="font-size:10px;font-family:'Syne',sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Historija uplata</div>
+      <div id="modal-historija" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);line-height:1.8;max-height:120px;overflow-y:auto;white-space:pre-wrap;font-family:'DM Sans',sans-serif;"></div>
+    </div>
+
+    <!-- Tabs: Dodaj / Ispravi -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;">
+      <button id="tab-dodaj" onclick="setUplataTab('dodaj')"
+        style="flex:1;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:8px;border-radius:8px;border:1.5px solid var(--success);background:rgba(62,207,142,0.15);color:var(--success);cursor:pointer;transition:all 0.2s;">
+        ➕ Dodaj uplatu
+      </button>
+      <button id="tab-ispravi" onclick="setUplataTab('ispravi')"
+        style="flex:1;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:8px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;">
+        ✏️ Ispravi iznos
+      </button>
+    </div>
+
+    <div id="tab-dodaj-opis" style="font-size:11px;color:var(--muted);margin-bottom:12px;">Unesite iznos koji je <b style="color:var(--success)">sada</b> plaćen — biće dodano na postojeće.</div>
+    <div id="tab-ispravi-opis" style="font-size:11px;color:var(--accent2);margin-bottom:12px;display:none;">⚠️ Ovo <b>zamjenjuje</b> ukupno plaćeni iznos. Koristite samo za ispravku greške.</div>
+
+    <div class="modal-field">
+      <label class="modal-label" id="modal-uplata-label" for="modal-uplata-iznos">Iznos (€)</label>
+      <input class="modal-input" type="number" id="modal-uplata-iznos" placeholder="0.00" min="0" step="0.01"/>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="modal-uplata-nap">Napomena (opcionalno)</label>
+      <input class="modal-input" type="text" id="modal-uplata-nap" placeholder="npr. gotovina, kartica..."/>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="zatvoriModal('uplata')">Odustani</button>
+      <button class="modal-btn confirm green" id="btn-potvrdi-uplatu" onclick="potvrdiUplatu()">✅ Potvrdi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Produženje dana ─────────────────────────────── -->
+<div class="modal-overlay" id="modal-produzenje-overlay" onclick="zatvoriModal('produzenje')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">📅 Produženje boravka</div>
+    <div class="modal-sub" id="modal-produzenje-sub">Gost: —</div>
+    <div class="modal-field">
+      <label class="modal-label" for="modal-produzenje-dana">Broj dodatnih dana</label>
+      <input class="modal-input" type="number" id="modal-produzenje-dana" placeholder="1" min="1" max="60"/>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="zatvoriModal('produzenje')">Odustani</button>
+      <button class="modal-btn confirm" onclick="potvrdiProduzenje()">📅 Produžи boravak</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Cijenovnik overlay + panel ─────────────────────────── -->
+<div class="lb-overlay" id="cj-overlay" onclick="zatvoriCijenovnik()"></div>
+<div class="lb-panel" id="cj-panel" style="width:min(100vw,480px)">
+  <div class="lb-header">
+    <div>
+      <div class="lb-title">💰 Cijenovnik</div>
+      <div class="lb-subtitle">Izmjeni cijene — primjenjuju se odmah</div>
+    </div>
+    <button class="lb-close" onclick="zatvoriCijenovnik()">✕</button>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding:24px 28px;">
+    <!-- Vozila -->
+    <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:18px;display:flex;align-items:center;gap:10px;">
+      🚗 Vozila (€/dan)
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    <div id="cj-vozila" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;"></div>
+
+    <!-- Opcije -->
+    <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:18px;display:flex;align-items:center;gap:10px;">
+      ➕ Opcije (€/dan)
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    <div id="cj-opcije" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px;"></div>
+
+    <div style="display:flex;gap:12px;">
+      <button class="modal-btn cancel" style="flex:1" onclick="zatvoriCijenovnik()">Odustani</button>
+      <button class="modal-btn confirm" style="flex:2" onclick="sacuvajCijene()">💾 Sačuvaj cijene</button>
+    </div>
+  </div>
+</div>
+<!-- ── Statistika overlay + panel ─────────────────────────── -->
+<div class="lb-overlay" id="st-overlay" onclick="zatvoriStatistiku()"></div>
+<div class="lb-panel" id="st-panel" style="width:min(100vw,680px);display:flex;flex-direction:column;">
+  <div class="lb-header">
+    <div>
+      <div class="lb-title">📈 Statistika</div>
+      <div class="lb-subtitle" id="st-subtitle">Učitavanje...</div>
+    </div>
+    <button class="lb-close" onclick="zatvoriStatistiku()">✕</button>
+  </div>
+  <div style="padding:12px 20px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);">
+      <span>Od:</span>
+      <input type="date" id="st-od" class="modal-input" style="padding:6px 10px;font-size:12px;width:140px;" onchange="ucitajStatistiku()"/>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);">
+      <span>Do:</span>
+      <input type="date" id="st-do" class="modal-input" style="padding:6px 10px;font-size:12px;width:140px;" onchange="ucitajStatistiku()"/>
+    </div>
+    <button class="lb-nav-today" onclick="resetujStatFilter()">Sve</button>
+    <button class="lb-refresh" style="margin-left:auto" onclick="ucitajStatistiku()">🔄 Osvježi</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:20px 24px;" id="st-content">
+    <div style="text-align:center;padding:60px;color:var(--muted);">Učitavanje...</div>
+  </div>
+</div>
+
+<style>
+  .st-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+  .st-grid.cols3 { grid-template-columns:1fr 1fr 1fr; }
+  .st-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px; position:relative; overflow:hidden; }
+  .st-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent),transparent); }
+  .st-card.green::before { background:linear-gradient(90deg,var(--success),transparent); }
+  .st-card.blue::before  { background:linear-gradient(90deg,var(--blue),transparent); }
+  .st-card-label { font-size:10px; font-family:'Syne',sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+  .st-card-val   { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; color:var(--text); }
+  .st-card-sub   { font-size:12px; color:var(--muted); margin-top:4px; }
+  .st-section-title { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin:20px 0 12px; display:flex; align-items:center; gap:10px; }
+  .st-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+  .st-table { width:100%; border-collapse:collapse; margin-bottom:20px; }
+  .st-table th { font-size:10px; font-family:'Syne',sans-serif; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); padding:8px 10px; border-bottom:1px solid var(--border); text-align:left; }
+  .st-table td { padding:10px 10px; border-bottom:1px solid rgba(37,40,48,0.5); font-size:13px; }
+  .st-table tr:last-child td { border-bottom:none; }
+  .st-table tr:hover td { background:rgba(255,255,255,0.02); }
+  .st-bar-wrap { margin-bottom:10px; }
+  .st-bar-label { display:flex; justify-content:space-between; font-size:12px; color:var(--text); margin-bottom:5px; }
+  .st-bar-label span:last-child { color:var(--muted); }
+  .st-bar-track { background:var(--surface); border-radius:4px; height:8px; overflow:hidden; }
+  .st-bar-fill  { height:100%; border-radius:4px; transition:width 0.6s ease; }
+  .st-placanje { display:flex; gap:10px; margin-bottom:20px; }
+  .st-pl-item  { flex:1; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; text-align:center; }
+  .st-pl-num   { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; }
+  .st-pl-lbl   { font-size:11px; color:var(--muted); margin-top:4px; }
+</style>
+
+<div class="modal-overlay" id="modal-obrisi-overlay" onclick="zatvoriModal('obrisi')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">🗑️ Briši unos</div>
+    <div class="modal-warn" id="modal-obrisi-warn">Da li ste sigurni?</div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="zatvoriModal('obrisi')">Odustani</button>
+      <button class="modal-btn confirm" style="background:var(--accent2);color:#fff" onclick="potvrdiObrisanje()">🗑️ Obriši</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Potvrda čišćenja tabele ────────────────────── -->
+<div class="modal-overlay" id="modal-ocisti-overlay" onclick="zatvoriModal('ocisti')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">⚠️ Očisti cijelu tabelu</div>
+    <div class="modal-warn" id="modal-ocisti-warn">Ovo će trajno obrisati sve podatke za taj dan.</div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="zatvoriModal('ocisti')">Odustani</button>
+      <button class="modal-btn confirm" style="background:var(--accent2);color:#fff" onclick="potvrdiOcistanje()">🗑️ Obriši sve</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Unos tablica ────────────────────────────────── -->
+<div class="modal-overlay" id="modal-tablice-overlay" onclick="zatvoriModal('tablice')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">🚗 Unesi tablice</div>
+    <div class="modal-sub" id="modal-tablice-sub">Gost: —</div>
+    <div class="modal-field">
+      <label class="modal-label" for="modal-tablice-val">Registarski broj</label>
+      <input class="modal-input" type="text" id="modal-tablice-val" placeholder="npr. 127-A-123" maxlength="15" style="text-transform:uppercase"/>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="zatvoriModal('tablice')">Odustani</button>
+      <button class="modal-btn confirm" onclick="potvrdiTablice()">💾 Sačuvaj</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─── Konstante (učitavaju se sa servera) ───────────────
+  const EUR_BAM = 1.95583;
+
+  let VOZILO_CIJENA = {
+    auto: 5, motor: 3, auto_sator: 10,
+    van: 15, van_l: 15, auto_karavan: 20, motohome: 20,
+  };
+  let CIJENA = { osoba: 5, dijete: 2.5, pas: 2, sator: 5 };
+
+  // Učitaj cijene sa servera pri startu
+  async function ucitajCijene() {
+    try {
+      const res  = await fetch('/api/cijene');
+      const data = await res.json();
+      if (data.vozilo)  VOZILO_CIJENA = data.vozilo;
+      if (data.opcije)  CIJENA        = data.opcije;
+    } catch { /* koristi defaults */ }
+  }
+  ucitajCijene();
+
+  let zadnjaCijenaEUR = 0;
+  let ukupnoPlacenoEUR = 0;
+  let historijUplata = [];
+  let izracunatoUspjesno = false;
+
+  // ─── Toggle checkbox ────────────────────────────────────
+  function toggleCheck(label) {
+    setTimeout(() => {
+      label.classList.toggle('checked', label.querySelector('input').checked);
+      if (izracunatoUspjesno) izracunaj();
+    }, 0);
+  }
+
+  // ─── Validacija ─────────────────────────────────────────
+  function validate() {
+    let ok = true;
+    const checks = [
+      { id: 'ime',     fid: 'f-ime',     test: v => v.trim().length >= 2 },
+      { id: 'drzava',  fid: 'f-drzava',  test: v => v.trim().length >= 2 },
+      { id: 'dani',    fid: 'f-dani',    test: v => Number.isInteger(+v) && +v >= 1 },
+      { id: 'osobe',   fid: 'f-osobe',   test: v => v === '' || +v >= 0 },
+      { id: 'djeca',   fid: 'f-djeca',   test: v => v === '' || +v >= 0 },
+    ];
+
+    checks.forEach(({ id, fid, test }) => {
+      const el = document.getElementById(id);
+      const fEl = document.getElementById(fid);
+      if (!test(el.value)) {
+        fEl.classList.add('has-error'); el.classList.add('error'); ok = false;
+      } else {
+        fEl.classList.remove('has-error'); el.classList.remove('error');
+      }
+    });
+
+    const voziloOk  = !!document.querySelector('input[name="vozilo"]:checked');
+    const vGrid     = document.getElementById('vozilo-grid');
+    const vErr      = document.getElementById('vozilo-err');
+    if (!voziloOk) { vGrid.classList.add('error-ring'); vErr.classList.add('show'); ok = false; }
+    else           { vGrid.classList.remove('error-ring'); vErr.classList.remove('show'); }
+
+    return ok;
+  }
+
+  // ─── Izračunaj ──────────────────────────────────────────
+  function izracunaj() {
+    if (!validate()) { showNotif('⚠️ Popunite sva obavezna polja!', true); return; }
+
+    const voziloVal = document.querySelector('input[name="vozilo"]:checked').value;
+    const osobe     = parseFloat(document.getElementById('osobe').value) || 0;
+    const djeca     = parseFloat(document.getElementById('djeca').value) || 0;
+    const dani      = parseInt(document.getElementById('dani').value)    || 1;
+    const pas       = document.getElementById('pas').checked;
+    const sator     = document.getElementById('sator').checked;
+
+    const voziloEUR = VOZILO_CIJENA[voziloVal] ?? 0;
+    const putnici   = osobe * CIJENA.osoba + djeca * CIJENA.dijete;
+    const pasEUR    = pas   ? CIJENA.pas   : 0;
+    const satorEUR  = sator ? CIJENA.sator : 0;
+
+    const perDay = voziloEUR + putnici + pasEUR + satorEUR;
+    zadnjaCijenaEUR = parseFloat((perDay * dani).toFixed(2));
+    const bamTotal  = parseFloat((zadnjaCijenaEUR * EUR_BAM).toFixed(2));
+
+    animirajBroj('cijena-num', zadnjaCijenaEUR);
+    animirajBroj('bam-num',   bamTotal);
+
+    document.getElementById('cijena-perday').textContent =
+      `${perDay.toFixed(2)} €/dan × ${dani} dan(a)`;
+
+    document.getElementById('breakdown').style.display = 'block';
+    document.getElementById('br-vozilo').textContent  = `${voziloEUR} €`;
+    document.getElementById('br-putnici').textContent = `+${putnici.toFixed(2)} €`;
+    document.getElementById('br-pas').textContent     = pasEUR   ? `+${pasEUR} €`   : '—';
+    document.getElementById('br-sator').textContent   = satorEUR ? `+${satorEUR} €` : '—';
+
+    document.getElementById('bam-strip').classList.add('visible');
+
+    // Prikaži plaćanje sekciju
+    document.getElementById('payment-card').classList.add('visible');
+    osvjeziPlacanje();
+
+    document.getElementById('btn-salji').disabled = false;
+    izracunatoUspjesno = true;
+    showNotif('✅ Cijena izračunata!');
+  }
+
+  // ─── Osvježi prikaz plaćanja ────────────────────────────
+  function osvjeziPlacanje() {
+    const total   = zadnjaCijenaEUR;
+    const paid    = ukupnoPlacenoEUR;
+    const remain  = Math.max(0, parseFloat((total - paid).toFixed(2)));
+    const pct     = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
+
+    document.getElementById('pay-total').textContent      = total.toFixed(2);
+    document.getElementById('pay-total-bam').textContent  = `KM ${(total * EUR_BAM).toFixed(2)}`;
+    document.getElementById('pay-paid').textContent       = paid.toFixed(2);
+    document.getElementById('pay-paid-bam').textContent   = `KM ${(paid * EUR_BAM).toFixed(2)}`;
+    document.getElementById('pay-remain').textContent     = remain.toFixed(2);
+    document.getElementById('pay-remain-bam').textContent = `KM ${(remain * EUR_BAM).toFixed(2)}`;
+
+    document.getElementById('pay-pct').textContent  = pct + '%';
+    document.getElementById('pay-bar').style.width  = pct + '%';
+
+    // Status badge
+    const badge = document.getElementById('status-badge');
+    if (paid <= 0) {
+      badge.className = 'status-badge neplaceno';
+      badge.textContent = '⏳ Nije plaćeno';
+    } else if (remain > 0.009) {
+      badge.className = 'status-badge djelimicno';
+      badge.textContent = `💛 Djelimično plaćeno (${pct}%)`;
+    } else {
+      badge.className = 'status-badge placeno';
+      badge.textContent = '✅ Plaćeno u cijelosti';
+    }
+  }
+
+  // ─── Dodaj uplatu ───────────────────────────────────────
+  function dodajUplatu() {
+    const iznosEl = document.getElementById('uplata-iznos');
+    const napEl   = document.getElementById('uplata-napomena');
+    const iznos   = parseFloat(iznosEl.value);
+
+    if (!iznos || iznos <= 0) {
+      iznosEl.classList.add('error');
+      showNotif('⚠️ Unesite ispravan iznos!', true);
+      return;
+    }
+
+    iznosEl.classList.remove('error');
+    ukupnoPlacenoEUR = parseFloat((ukupnoPlacenoEUR + iznos).toFixed(2));
+
+    const uplata = {
+      iznos,
+      napomena: napEl.value.trim() || '',
+      vrijeme:  new Date().toLocaleString('bs-BA', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }),
+    };
+    historijUplata.push(uplata);
+
+    // Dodaj u listu
+    const lista = document.getElementById('uplata-lista');
+    const item  = document.createElement('div');
+    item.className = 'uplata-item';
+    item.innerHTML = `
+      <div class="uplata-dot"></div>
+      <span class="uplata-iznos">+${iznos.toFixed(2)} €</span>
+      <span class="uplata-bam">(KM ${(iznos * EUR_BAM).toFixed(2)})</span>
+      ${uplata.napomena ? `<span class="uplata-komentar">${uplata.napomena}</span>` : ''}
+      <span class="uplata-time">${uplata.vrijeme}</span>
+    `;
+    lista.appendChild(item);
+
+    document.getElementById('uplata-history').style.display = 'block';
+
+    osvjeziPlacanje();
+
+    iznosEl.value = '';
+    napEl.value   = '';
+
+    showNotif(`✅ Uplata od ${iznos.toFixed(2)} € dodana!`);
+  }
+
+  // ─── Animacija broja ────────────────────────────────────
+  function animirajBroj(elId, target) {
+    const el = document.getElementById(elId);
+    const start = parseFloat(el.textContent) || 0;
+    const t0 = performance.now();
+    (function step(now) {
+      const p = Math.min((now - t0) / 550, 1);
+      el.textContent = (start + (target - start) * (1 - Math.pow(1 - p, 3))).toFixed(2);
+      if (p < 1) requestAnimationFrame(step);
+    })(performance.now());
+  }
+
+  // ─── Pošalji u Excel ────────────────────────────────────
+  async function salji() {
+    if (!izracunatoUspjesno) { showNotif('⚠️ Prvo izračunajte cijenu!', true); return; }
+
+    const btn = document.getElementById('btn-salji');
+    const txt = document.getElementById('btn-salji-text');
+    btn.classList.add('loading'); btn.disabled = true; txt.textContent = 'Slanje...';
+
+    const payload = {
+      ime:       document.getElementById('ime').value.trim(),
+      drzava:    document.getElementById('drzava').value.trim(),
+      tablice:   document.getElementById('tablice').value.trim().toUpperCase(),
+      vozilo:    document.querySelector('input[name="vozilo"]:checked')?.value || '',
+      osobe:     parseFloat(document.getElementById('osobe').value) || 0,
+      djeca:     parseFloat(document.getElementById('djeca').value) || 0,
+      pas:       document.getElementById('pas').checked,
+      sator:     document.getElementById('sator').checked,
+      dani:      parseInt(document.getElementById('dani').value) || 1,
+      ukupnoEUR: zadnjaCijenaEUR,
+      ukupnoBAM: parseFloat((zadnjaCijenaEUR * EUR_BAM).toFixed(2)),
+      placenoEUR:  ukupnoPlacenoEUR,
+      ostatakEUR:  parseFloat((Math.max(0, zadnjaCijenaEUR - ukupnoPlacenoEUR)).toFixed(2)),
+      statusPlacanja: ukupnoPlacenoEUR <= 0 ? 'Nije plaćeno'
+                    : ukupnoPlacenoEUR >= zadnjaCijenaEUR ? 'Plaćeno'
+                    : 'Djelimično',
+      komentar:  document.getElementById('komentar').value.trim(),
+      uplate:    historijUplata,
+    };
+
+    try {
+      const res  = await fetch('/api/kalkulator', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showNotif('✅ Sačuvano! Račun se generiše...');
+        // Otvori račun u novom tabu
+        if (data.racunUrl) {
+          setTimeout(() => {
+            window.open(data.racunUrl, '_blank');
+          }, 400);
+        }
+        resetFormu();
+      } else {
+        showNotif('❌ Greška: ' + (data.error || 'Nepoznata'), true);
+      }
+    } catch {
+      showNotif('❌ Server nije dostupan. Pokrenite server.js!', true);
+    } finally {
+      btn.classList.remove('loading'); btn.disabled = false; txt.textContent = 'Pošalji u Excel';
+    }
+  }
+
+  function resetFormu() {
+    // Resetuj stanje plaćanja i historiju
+    ukupnoPlacenoEUR = 0;
+    historijUplata   = [];
+    zadnjaCijenaEUR  = 0;
+    izracunatoUspjesno = false;
+
+    // Sakrij payment karticu i uplata listu
+    document.getElementById('payment-card').classList.remove('visible');
+    document.getElementById('uplata-history').style.display = 'none';
+    document.getElementById('uplata-lista').innerHTML = '';
+    document.getElementById('uplata-iznos').value = '';
+    document.getElementById('uplata-napomena').value = '';
+
+    // Resetuj price display
+    document.getElementById('cijena-num').textContent = '0.00';
+    document.getElementById('bam-num').textContent    = '0.00';
+    document.getElementById('bam-strip').classList.remove('visible');
+    document.getElementById('breakdown').style.display = 'none';
+    document.getElementById('cijena-perday').textContent = 'Unesite podatke i kliknite "Izračunaj"';
+
+    // Resetuj formu
+    document.getElementById('ime').value     = '';
+    document.getElementById('drzava').value  = '';
+    document.getElementById('tablice').value = '';
+    document.getElementById('dani').value    = '';
+    document.getElementById('osobe').value   = '';
+    document.getElementById('djeca').value   = '';
+    document.getElementById('pas').checked   = false;
+    document.getElementById('sator').checked = false;
+    document.getElementById('komentar').value = '';
+    document.querySelectorAll('input[name="vozilo"]').forEach(r => r.checked = false);
+    document.getElementById('btn-salji').disabled = true;
+
+    // Scroll na vrh
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ─── Notifikacija ───────────────────────────────────────
+  function showNotif(msg, isError = false) {
+    const el = document.getElementById('notif');
+    el.textContent = msg;
+    el.classList.toggle('error', isError);
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 3500);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // ── MODE SWITCH ─────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════
+
+  let trenutniMode = 'individualni';
+
+  function setMode(mode) {
+    trenutniMode = mode;
+    document.getElementById('mode-individualni').style.display = mode === 'individualni' ? 'block' : 'none';
+    document.getElementById('mode-grupa').style.display        = mode === 'grupa'        ? 'block' : 'none';
+    document.getElementById('tab-individualni').classList.toggle('active', mode === 'individualni');
+    document.getElementById('tab-grupa').classList.toggle('active', mode === 'grupa');
+    if (mode === 'grupa' && document.getElementById('vozila-lista').children.length === 0) {
+      dodajVoziloRed('motor'); // defaultni red — motor
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // ── GRUPA ───────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════
+
+  let grupaTip    = 'motociklisti';
+  let voziloRedBr = 0;
+
+  const VOZILO_OPCIJE_HTML = `
+    <option value="motor">🏍️ Motor (3 €/dan)</option>
+    <option value="auto">🚗 Auto (5 €/dan)</option>
+    <option value="auto_sator">⛺ Auto + Šator (10 €/dan)</option>
+    <option value="van">🚐 Van (15 €/dan)</option>
+    <option value="van_l">🚌 Van L (15 €/dan)</option>
+    <option value="auto_karavan">🏕️ Auto + Karavan (20 €/dan)</option>
+    <option value="motohome">🏠 Motohome (20 €/dan)</option>
+  `;
+
+  function setGrupaTip(el, tip) {
+    grupaTip = tip;
+    document.querySelectorAll('.grupa-tip').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function dodajVoziloRed(defaultVozilo = 'motor') {
+    voziloRedBr++;
+    const id  = voziloRedBr;
+    const div = document.createElement('div');
+    div.className = 'vozilo-red';
+    div.id = `vozilo-red-${id}`;
+    div.innerHTML = `
+      <select class="vozilo-red-select" id="vr-tip-${id}" onchange="azurirajGrupaSummary()">
+        ${VOZILO_OPCIJE_HTML}
+      </select>
+      <div style="position:relative;">
+        <input class="vozilo-red-kol" type="number" id="vr-kol-${id}"
+          value="1" min="1" max="999"
+          oninput="azurirajGrupaSummary()"
+          style="padding-right:32px!important;"/>
+        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);pointer-events:none;">kom</span>
+      </div>
+      <button class="btn-ukloni-clan" onclick="ukloniVoziloRed(${id})" title="Ukloni">✕</button>
+    `;
+    document.getElementById('vozila-lista').appendChild(div);
+    // Postavi default vozilo
+    document.getElementById(`vr-tip-${id}`).value = defaultVozilo;
+    azurirajGrupaSummary();
+  }
+
+  function ukloniVoziloRed(id) {
+    const el = document.getElementById(`vozilo-red-${id}`);
+    if (el) el.remove();
+    azurirajGrupaSummary();
+  }
+
+  function citajVozilaGrupe() {
+    return [...document.querySelectorAll('.vozilo-red')].map(row => {
+      const id  = row.id.replace('vozilo-red-','');
+      const tip = document.getElementById(`vr-tip-${id}`)?.value || 'motor';
+      const kol = parseInt(document.getElementById(`vr-kol-${id}`)?.value) || 1;
+      return { tip, kol };
+    });
+  }
+
+  function azurirajGrupaSummary() {
+    const dani   = parseInt(document.getElementById('g-dani').value) || 1;
+    const pas    = document.getElementById('g-pas').checked;
+    const sator  = document.getElementById('g-sator').checked;
+    const osobe  = parseInt(document.getElementById('g-osobe')?.value) || 0;
+    const djeca  = parseInt(document.getElementById('g-djeca')?.value) || 0;
+    const vozila = citajVozilaGrupe();
+
+    let ukupnoVozila = 0, ukupnoKom = 0;
+    vozila.forEach(v => {
+      ukupnoVozila += (VOZILO_CIJENA[v.tip] ?? 0) * v.kol * dani;
+      ukupnoKom    += v.kol;
+    });
+    const osobeEUR   = osobe * CIJENA.osoba  * dani;
+    const djecaEUR   = djeca * CIJENA.dijete * dani;
+    const ukupnoOpcije = ((pas ? CIJENA.pas : 0) + (sator ? CIJENA.sator : 0)) * dani;
+    const ukupno = ukupnoVozila + osobeEUR + djecaEUR + ukupnoOpcije;
+    const bam    = parseFloat((ukupno * EUR_BAM).toFixed(2));
+
+    // Ažuriraj tooltip sub labele
+    if (document.getElementById('g-pas-sub'))   document.getElementById('g-pas-sub').textContent   = `+${CIJENA.pas} €/dan`;
+    if (document.getElementById('g-sator-sub')) document.getElementById('g-sator-sub').textContent = `+${CIJENA.sator} €/dan`;
+
+    const dijelovi = [];
+    if (ukupnoKom > 0) dijelovi.push(`${ukupnoKom} vozil(a)`);
+    if (osobe > 0)     dijelovi.push(`${osobe} odraslih`);
+    if (djeca > 0)     dijelovi.push(`${djeca} djece`);
+    if (pas)           dijelovi.push('pas');
+    if (sator)         dijelovi.push('šator');
+    dijelovi.push(`× ${dani} dana`);
+
+    document.getElementById('grupa-summary').innerHTML = `
+      <span>${dijelovi.join(' · ')}</span>
+      <strong>${ukupno.toFixed(2)} € <span style="font-size:13px;color:var(--bam)">(${bam.toFixed(2)} KM)</span></strong>
+    `;
+  }
+
+  async function saljiGrupu() {
+    const naziv      = document.getElementById('g-naziv').value.trim();
+    const drzava     = document.getElementById('g-drzava').value.trim();
+    const dani       = parseInt(document.getElementById('g-dani').value) || 0;
+    const pas        = document.getElementById('g-pas').checked;
+    const sator      = document.getElementById('g-sator').checked;
+    const osobe      = parseInt(document.getElementById('g-osobe')?.value) || 0;
+    const djeca      = parseInt(document.getElementById('g-djeca')?.value) || 0;
+    const komentar   = document.getElementById('g-komentar').value.trim();
+    const placeno    = parseFloat(document.getElementById('g-placeno').value) || 0;
+    const placenoNap = document.getElementById('g-placeno-nap').value.trim();
+    const vozila     = citajVozilaGrupe();
+
+    if (!naziv  || naziv.length  < 2) { showNotif('❌ Unesite naziv / vođu grupe.', true); return; }
+    if (!drzava || drzava.length < 2) { showNotif('❌ Unesite državu.', true); return; }
+    if (dani < 1)                     { showNotif('❌ Unesite broj dana.', true); return; }
+    if (vozila.length === 0)          { showNotif('❌ Dodajte barem jedno vozilo.', true); return; }
+
+    const btn = document.getElementById('btn-salji-grupu');
+    const txt = document.getElementById('btn-salji-grupu-text');
+    btn.classList.add('loading'); btn.disabled = true; txt.textContent = 'Šaljem...';
+
+    try {
+      const res  = await fetch('/api/grupa', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ naziv, drzava, dani, pas, sator, osobe, djeca, komentar, placeno, placenoNap, tip: grupaTip, vozila }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showNotif(`✅ Grupa "${naziv}" sačuvana!`);
+        if (data.racunUrl) setTimeout(() => window.open(data.racunUrl, '_blank'), 400);
+        ['g-naziv','g-drzava','g-dani','g-placeno','g-placeno-nap','g-komentar','g-osobe','g-djeca'].forEach(id => {
+          const el = document.getElementById(id); if (el) el.value = '';
+        });
+        document.getElementById('g-pas').checked   = false;
+        document.getElementById('g-sator').checked = false;
+        document.getElementById('vozila-lista').innerHTML = '';
+        voziloRedBr = 0;
+        dodajVoziloRed('motor');
+        azurirajGrupaSummary();
+      } else {
+        showNotif('❌ ' + (data.error || 'Greška'), true);
+      }
+    } catch { showNotif('❌ Server nije dostupan.', true); }
+    finally {
+      btn.classList.remove('loading'); btn.disabled = false; txt.textContent = 'Pošalji Grupu u Excel';
+    }
+  }
+
+  document.getElementById('g-dani').addEventListener('input', azurirajGrupaSummary);
+  document.getElementById('g-pas').addEventListener('change', azurirajGrupaSummary);
+  document.getElementById('g-sator').addEventListener('change', azurirajGrupaSummary);
+
+  // ═══════════════════════════════════════════════════════
+  // ── STATISTIKA ──────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════
+
+  function otvoriStatistiku() {
+    document.getElementById('st-overlay').classList.add('open');
+    document.getElementById('st-panel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    ucitajStatistiku();
+  }
+  function zatvoriStatistiku() {
+    document.getElementById('st-overlay').classList.remove('open');
+    document.getElementById('st-panel').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function resetujStatFilter() {
+    document.getElementById('st-od').value  = '';
+    document.getElementById('st-do').value  = '';
+    ucitajStatistiku();
+  }
+
+  async function ucitajStatistiku() {
+    const od  = document.getElementById('st-od').value;
+    const doo = document.getElementById('st-do').value;
+    document.getElementById('st-content').innerHTML =
+      '<div style="text-align:center;padding:60px;color:var(--muted);">Učitavanje...</div>';
+
+    const params = new URLSearchParams();
+    if (od)  params.set('datumOd', od);
+    if (doo) params.set('datumDo', doo);
+
+    try {
+      const res  = await fetch(`/api/statistika?${params}`);
+      const data = await res.json();
+
+      if (data.prazno || !data.ukupnoTurista) {
+        document.getElementById('st-content').innerHTML = `
+          <div style="text-align:center;padding:60px;color:var(--muted);">
+            <div style="font-size:40px;margin-bottom:12px">📊</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700">Nema podataka</div>
+            <div style="font-size:13px;margin-top:6px">Dodajte goste pa osvježite statistiku</div>
+          </div>`;
+        document.getElementById('st-subtitle').textContent = 'Nema podataka';
+        return;
+      }
+
+      document.getElementById('st-subtitle').textContent =
+        `${data.ukupnoTurista} turista · ${data.ukupnoEUR.toFixed(2)} € ukupno`;
+
+      const boje = ['#f5a623','#3ecf8e','#5b9cf6','#e8534a','#a78bfa','#fb923c','#34d399','#60a5fa','#f472b6','#fbbf24'];
+
+      // KPI
+      const kpiHTML = `
+        <div class="st-grid cols3">
+          <div class="st-card">
+            <div class="st-card-label">Turista ukupno</div>
+            <div class="st-card-val">${data.ukupnoTurista}</div>
+            <div class="st-card-sub">prosj. ${data.prosjecniBoravak} dana/gostu</div>
+          </div>
+          <div class="st-card green">
+            <div class="st-card-label">Ukupno prihod</div>
+            <div class="st-card-val">${data.ukupnoEUR.toFixed(2)} €</div>
+            <div class="st-card-sub">${(data.ukupnoEUR * EUR_BAM).toFixed(2)} KM</div>
+          </div>
+          <div class="st-card blue">
+            <div class="st-card-label">Naplaćeno</div>
+            <div class="st-card-val">${data.ukupnoPlaceno.toFixed(2)} €</div>
+            <div class="st-card-sub">Ostatak: ${data.ukupnoOstatak.toFixed(2)} €</div>
+          </div>
+        </div>`;
+
+      // Plaćanje
+      const uk = data.ukupnoTurista || 1;
+      const plHL = `
+        <div class="st-section-title">💳 Status plaćanja</div>
+        <div class="st-placanje">
+          <div class="st-pl-item">
+            <div class="st-pl-num" style="color:var(--success)">${data.placanje.placeno}</div>
+            <div class="st-pl-lbl">Plaćeno ✅<br/>${Math.round(data.placanje.placeno/uk*100)}%</div>
+          </div>
+          <div class="st-pl-item">
+            <div class="st-pl-num" style="color:var(--accent)">${data.placanje.djelimicno}</div>
+            <div class="st-pl-lbl">Djelimično ◑<br/>${Math.round(data.placanje.djelimicno/uk*100)}%</div>
+          </div>
+          <div class="st-pl-item">
+            <div class="st-pl-num" style="color:var(--accent2)">${data.placanje.neplaceno}</div>
+            <div class="st-pl-lbl">Nije plaćeno ✕<br/>${Math.round(data.placanje.neplaceno/uk*100)}%</div>
+          </div>
+        </div>`;
+
+      // Države
+      const maxDr = data.poDrzavi[0]?.turista || 1;
+      const drzHL = `
+        <div class="st-section-title">🌍 Po državi (TOP ${Math.min(data.poDrzavi.length,15)})</div>
+        ${data.poDrzavi.slice(0,15).map((d,i) => `
+          <div class="st-bar-wrap">
+            <div class="st-bar-label">
+              <span>${d.drzava}</span>
+              <span>${d.turista} turist${d.turista===1?'':'a'} · ${d.prihod.toFixed(0)} €</span>
+            </div>
+            <div class="st-bar-track">
+              <div class="st-bar-fill" style="width:${Math.round(d.turista/maxDr*100)}%;background:${boje[i%boje.length]}"></div>
+            </div>
+          </div>`).join('')}`;
+
+      // Vozila
+      const maxVoz = data.poVozilu[0]?.broj || 1;
+      const vozHL = `
+        <div class="st-section-title">🚗 Po vozilu</div>
+        <table class="st-table">
+          <thead><tr><th>Vozilo</th><th>Broj</th><th style="text-align:right">Prihod (€)</th></tr></thead>
+          <tbody>${data.poVozilu.map((v,i) => `
+            <tr>
+              <td style="font-weight:500">${v.vozilo}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="flex:1;background:var(--surface);border-radius:3px;height:6px;min-width:60px;overflow:hidden">
+                    <div style="height:100%;background:${boje[i%boje.length]};width:${Math.round(v.broj/maxVoz*100)}%;border-radius:3px"></div>
+                  </div>
+                  <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">${v.broj}</span>
+                </div>
+              </td>
+              <td style="text-align:right;color:var(--accent);font-family:'Syne',sans-serif;font-weight:700">${v.prihod.toFixed(2)} €</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+
+      // Trend
+      const trendHL = data.poDanu.length > 1 ? (() => {
+        const maxT  = Math.max(...data.poDanu.map(d => d.turista));
+        const zadnjih = data.poDanu.slice(-30).reverse();
+        return `
+          <div class="st-section-title">📅 Trend (zadnjih ${zadnjih.length} dana)</div>
+          <table class="st-table">
+            <thead><tr><th>Datum</th><th>Turista</th><th style="text-align:right">Prihod (€)</th></tr></thead>
+            <tbody>${zadnjih.map(d => {
+              const [y,m,dd] = d.datum.split('-');
+              return `<tr>
+                <td style="color:var(--muted)">${dd}.${m}.${y}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="flex:1;background:var(--surface);border-radius:3px;height:5px;min-width:60px;overflow:hidden">
+                      <div style="height:100%;background:var(--blue);width:${Math.round(d.turista/maxT*100)}%;border-radius:3px"></div>
+                    </div>
+                    <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">${d.turista}</span>
+                  </div>
+                </td>
+                <td style="text-align:right;color:var(--success);font-family:'Syne',sans-serif;font-weight:600">${d.prihod.toFixed(2)} €</td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table>`;
+      })() : '';
+
+      document.getElementById('st-content').innerHTML = kpiHTML + plHL + drzHL + vozHL + trendHL;
+
+    } catch(e) {
+      document.getElementById('st-content').innerHTML =
+        `<div style="text-align:center;padding:40px;color:var(--accent2)">❌ Server nije dostupan.</div>`;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // ── CIJENOVNIK ──────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════
+
+  const VOZILO_NAZIV_CJ = {
+    auto:'Auto', motor:'Motor', auto_sator:'Auto + Šator',
+    van:'Van', van_l:'Van L', auto_karavan:'Auto + Karavan', motohome:'Motohome',
+  };
+  const OPCIJE_NAZIV = {
+    osoba:'Osoba', dijete:'Dijete', pas:'Pas 🐕', sator:'Šator ⛺',
+  };
+
+  function otvoriCijenovnik() {
+    document.getElementById('cj-overlay').classList.add('open');
+    document.getElementById('cj-panel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    renderCijenovnik();
+  }
+  function zatvoriCijenovnik() {
+    document.getElementById('cj-overlay').classList.remove('open');
+    document.getElementById('cj-panel').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function renderCijenovnik() {
+    // Vozila
+    const vDiv = document.getElementById('cj-vozila');
+    vDiv.innerHTML = Object.entries(VOZILO_NAZIV_CJ).map(([key, naziv]) => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">
+        <div style="font-size:12px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">${naziv}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="color:var(--accent);font-family:'Syne',sans-serif;font-weight:700;font-size:15px">€</span>
+          <input type="number" id="cj-v-${key}" value="${VOZILO_CIJENA[key] ?? 0}"
+            min="0" step="0.5"
+            style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Syne',sans-serif;font-weight:700;font-size:18px;padding:8px 10px;outline:none;width:100%;text-align:right;"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+          <span style="color:var(--muted);font-size:11px">/dan</span>
+        </div>
+      </div>
+    `).join('');
+
+    // Opcije
+    const oDiv = document.getElementById('cj-opcije');
+    oDiv.innerHTML = Object.entries(OPCIJE_NAZIV).map(([key, naziv]) => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">
+        <div style="font-size:12px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">${naziv}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="color:var(--success);font-family:'Syne',sans-serif;font-weight:700;font-size:15px">€</span>
+          <input type="number" id="cj-o-${key}" value="${CIJENA[key] ?? 0}"
+            min="0" step="0.5"
+            style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Syne',sans-serif;font-weight:700;font-size:18px;padding:8px 10px;outline:none;width:100%;text-align:right;"
+            onfocus="this.style.borderColor='var(--success)'" onblur="this.style.borderColor='var(--border)'"/>
+          <span style="color:var(--muted);font-size:11px">/dan</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function sacuvajCijene() {
+    const vozilo = {};
+    Object.keys(VOZILO_NAZIV_CJ).forEach(k => {
+      vozilo[k] = parseFloat(document.getElementById(`cj-v-${k}`).value) || 0;
+    });
+    const opcije = {};
+    Object.keys(OPCIJE_NAZIV).forEach(k => {
+      opcije[k] = parseFloat(document.getElementById(`cj-o-${k}`).value) || 0;
+    });
+    try {
+      const res = await fetch('/api/cijene', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vozilo, opcije }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        // Ažuriraj lokalne konstante odmah
+        Object.assign(VOZILO_CIJENA, vozilo);
+        Object.assign(CIJENA, opcije);
+        showNotif('✅ Cijene sačuvane!');
+        zatvoriCijenovnik();
+        if (izracunatoUspjesno) izracunaj();
+      } else { showNotif('❌ ' + (data.error || 'Greška'), true); }
+    } catch { showNotif('❌ Server nije dostupan.', true); }
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // ── LEADERBOARD + NAVIGACIJA + SEARCH + FILTERI ─────────
+  // ═══════════════════════════════════════════════════════
+
+  let lbDatumi   = [];
+  let lbDatumIdx = -1;
+  let modalCtx   = {};
+  let lbFilter   = 'svi';
+  let lbSearch   = '';
+
+  function otvoriLeaderboard() {
+    document.getElementById('lb-overlay').classList.add('open');
+    document.getElementById('lb-panel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    ucitajLeaderboard();
+  }
+  function zatvoriLeaderboard() {
+    document.getElementById('lb-overlay').classList.remove('open');
+    document.getElementById('lb-panel').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  async function idiNaDanas() {
+    await osvjeziListuDatuma();
+    lbDatumIdx = lbDatumi.length - 1;
+    ucitajPodatke();
+  }
+  async function navigirajDan(smjer) {
+    if (lbDatumi.length === 0) await osvjeziListuDatuma();
+    lbDatumIdx = Math.max(0, Math.min(lbDatumi.length - 1, lbDatumIdx + smjer));
+    ucitajPodatke();
+  }
+  async function osvjeziListuDatuma() {
+    try {
+      const res  = await fetch('/api/datumi');
+      const data = await res.json();
+      lbDatumi   = data.datumi || [];
+      const danas = danasniDatum();
+      lbDatumIdx  = lbDatumi.indexOf(danas);
+      if (lbDatumIdx === -1) lbDatumIdx = lbDatumi.length - 1;
+    } catch { lbDatumi = []; }
+  }
+  function danasniDatum() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  async function ucitajLeaderboard() {
+    await osvjeziListuDatuma();
+    ucitajPodatke();
+  }
+
+  // Search/filter handlers
+  function onSearch() {
+    lbSearch = document.getElementById('lb-search').value;
+    document.getElementById('lb-search-clear').style.display = lbSearch ? 'block' : 'none';
+    ucitajPodatke();
+  }
+  function clearSearch() {
+    document.getElementById('lb-search').value = '';
+    lbSearch = '';
+    document.getElementById('lb-search-clear').style.display = 'none';
+    ucitajPodatke();
+  }
+  function setFilter(f) {
+    lbFilter = f;
+    ['svi','placeno','djelimicno','neplaceno'].forEach(k => {
+      document.getElementById('f-'+k).classList.toggle('active', k === f);
+    });
+    ucitajPodatke();
+  }
+
+  async function ucitajPodatke() {
+    document.getElementById('lb-loading').style.display = 'block';
+    document.getElementById('lb-empty').style.display   = 'none';
+    document.getElementById('lb-table').style.display   = 'none';
+
+    const datum = lbDatumi[lbDatumIdx] || null;
+    document.getElementById('lb-nav-datum').textContent = datum ? formatDatumPrikaz(datum) : 'Svi podaci';
+    document.getElementById('lb-prev').disabled = lbDatumIdx <= 0;
+    document.getElementById('lb-next').disabled = lbDatumIdx >= lbDatumi.length - 1;
+
+    const params = new URLSearchParams();
+    if (datum)    params.set('datum',  datum);
+    if (lbSearch) params.set('search', lbSearch);
+    if (lbFilter !== 'svi') params.set('filter', lbFilter);
+
+    try {
+      const res  = await fetch(`/api/podaci?${params}`);
+      const data = await res.json();
+
+      document.getElementById('lb-datum').textContent = datum || 'Svi podaci';
+      document.getElementById('lb-s-turista').textContent = data.brojTurista ?? 0;
+      document.getElementById('lb-s-eur').textContent     = `€ ${(data.ukupnoEUR  ?? 0).toFixed(2)}`;
+      document.getElementById('lb-s-placeno').textContent = `€ ${(data.placenoEUR ?? 0).toFixed(2)}`;
+      document.getElementById('lb-s-ostatak').textContent = `€ ${(data.ostatakEUR ?? 0).toFixed(2)}`;
+
+      const cnt   = data.brojTurista ?? 0;
+      const badge = document.getElementById('lb-count');
+      badge.textContent   = cnt;
+      badge.style.display = cnt > 0 ? 'flex' : 'none';
+
+      if (!data.rows || data.rows.length === 0) {
+        document.getElementById('lb-loading').style.display = 'none';
+        document.getElementById('lb-empty').style.display   = 'block';
+        return;
+      }
+
+      const tbody = document.getElementById('lb-tbody');
+      tbody.innerHTML = '';
+      data.rows.forEach((r, idx) => {
+        const statusClass = r.status?.includes('✅') ? 'placeno'
+                          : r.status?.includes('Djelimično') ? 'djelimicno'
+                          : 'neplaceno';
+        const tabPrikaz = (!r.tablice || r.tablice === '—')
+          ? `<span class="tablice-missing" onclick="otvoriModalTablice('${r.id}','${r.ime.replace(/'/g,"\\'")}')">+ unesi tablice</span>`
+          : r.tablice;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="lb-rb">${idx+1}</td>
+          <td class="lb-ime">${r.ime}<br/><span style="font-size:11px;color:var(--muted);font-weight:400">${r.drzava}</span></td>
+          <td class="lb-tab">${tabPrikaz}</td>
+          <td>${r.vozilo}</td>
+          <td style="text-align:center">${r.dani}</td>
+          <td class="lb-eur">€ ${r.eur.toFixed(2)}<br/><span style="font-size:10px;color:var(--bam)">KM ${r.bam.toFixed(2)}</span></td>
+          <td class="lb-placeno">€ ${r.placenoEUR.toFixed(2)}</td>
+          <td class="lb-ostatak">€ ${r.ostatakEUR.toFixed(2)}</td>
+          <td><span class="lb-status ${statusClass}">${r.status}</span></td>
+          <td class="lb-actions">
+            <button class="btn-action uplata"     onclick="otvoriModalUplata('${r.id}','${r.ime.replace(/'/g,"\\'")}')">+ €</button>
+            <button class="btn-action produzenje" onclick="otvoriModalProduzenje('${r.id}','${r.ime.replace(/'/g,"\\'")}',${r.dani})">+Dan</button>
+            <button class="btn-action racun"      onclick="window.open('/racun/${r.id}','_blank')" title="Otvori račun">🧾</button>
+            <button class="btn-action obrisi"     onclick="otvoriModalObrisi('${r.id}','${r.ime.replace(/'/g,"\\'")}')">✕</button>
+          </td>
+          <td class="lb-kom" title="${r.komentar || ''}">${r.komentar && r.komentar !== '—' ? r.komentar : ''}</td>
+          <td class="lb-ts">${r.timestamp}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const tfoot = document.getElementById('lb-tfoot');
+      tfoot.innerHTML = `
+        <tr>
+          <td colspan="5" style="color:var(--accent)">UKUPNO (${data.brojTurista} turista)</td>
+          <td class="lb-eur">€ ${data.ukupnoEUR.toFixed(2)}<br/><span style="font-size:10px;color:var(--bam)">KM ${data.ukupnoBAM.toFixed(2)}</span></td>
+          <td class="lb-placeno">€ ${data.placenoEUR.toFixed(2)}</td>
+          <td class="lb-ostatak">€ ${data.ostatakEUR.toFixed(2)}</td>
+          <td colspan="4"></td>
+        </tr>
+      `;
+
+      document.getElementById('lb-loading').style.display = 'none';
+      document.getElementById('lb-table').style.display   = 'table';
+
+    } catch {
+      document.getElementById('lb-loading').textContent = '❌ Server nije dostupan.';
+    }
+  }
+
+  function formatDatumPrikaz(datum) {
+    const [y, m, d] = datum.split('-');
+    const danas = danasniDatum();
+    const jucer = (() => { const x = new Date(); x.setDate(x.getDate()-1); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`; })();
+    if (datum === danas) return `📅 Danas (${d}.${m}.${y})`;
+    if (datum === jucer) return `📆 Juče (${d}.${m}.${y})`;
+    return `${d}.${m}.${y}`;
+  }
+
+  // ── Modali ──────────────────────────────────────────────
+  let uplataTab = 'dodaj';
+
+  function setUplataTab(tab) {
+    uplataTab = tab;
+    const isDodaj = tab === 'dodaj';
+    document.getElementById('tab-dodaj').style.background    = isDodaj ? 'rgba(62,207,142,0.15)' : 'transparent';
+    document.getElementById('tab-dodaj').style.borderColor   = isDodaj ? 'var(--success)' : 'var(--border)';
+    document.getElementById('tab-dodaj').style.color         = isDodaj ? 'var(--success)' : 'var(--muted)';
+    document.getElementById('tab-ispravi').style.background  = !isDodaj ? 'rgba(232,83,74,0.12)' : 'transparent';
+    document.getElementById('tab-ispravi').style.borderColor = !isDodaj ? 'var(--accent2)' : 'var(--border)';
+    document.getElementById('tab-ispravi').style.color       = !isDodaj ? 'var(--accent2)' : 'var(--muted)';
+    document.getElementById('tab-dodaj-opis').style.display   = isDodaj  ? 'block' : 'none';
+    document.getElementById('tab-ispravi-opis').style.display = !isDodaj ? 'block' : 'none';
+    const btn = document.getElementById('btn-potvrdi-uplatu');
+    btn.textContent      = isDodaj ? '✅ Dodaj uplatu' : '✏️ Ispravi iznos';
+    btn.style.background = isDodaj ? 'var(--success)' : 'var(--accent2)';
+    document.getElementById('modal-uplata-iznos').value = '';
+    document.getElementById('modal-uplata-iznos').placeholder = isDodaj ? '0.00 (novi iznos)' : '0.00 (ukupno plaćeno)';
+  }
+
+  async function otvoriModalUplata(id, ime) {
+    modalCtx = { id, ime };
+    uplataTab = 'dodaj';
+    document.getElementById('modal-uplata-sub').textContent = `${ime} — učitavam...`;
+    document.getElementById('ms-ukupno').textContent  = '...';
+    document.getElementById('ms-placeno').textContent = '...';
+    document.getElementById('ms-ostatak').textContent = '...';
+    document.getElementById('modal-historija-wrap').style.display = 'none';
+    document.getElementById('modal-uplata-iznos').value = '';
+    document.getElementById('modal-uplata-nap').value   = '';
+    setUplataTab('dodaj');
+    document.getElementById('modal-uplata-overlay').classList.add('open');
+    try {
+      const res  = await fetch(`/api/red/${id}`);
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById('modal-uplata-sub').textContent = `${data.ime} | ${data.status}`;
+        document.getElementById('ms-ukupno').textContent  = `€ ${data.ukupnoEUR.toFixed(2)}`;
+        document.getElementById('ms-placeno').textContent = `€ ${data.placenoEUR.toFixed(2)}`;
+        document.getElementById('ms-ostatak').textContent = `€ ${data.ostatakEUR.toFixed(2)}`;
+        if (data.historijaUplata && data.historijaUplata !== '—') {
+          document.getElementById('modal-historija').textContent = data.historijaUplata;
+          document.getElementById('modal-historija-wrap').style.display = 'block';
+        }
+      }
+    } catch { document.getElementById('modal-uplata-sub').textContent = `${ime} | Server nedostupan`; }
+    setTimeout(() => document.getElementById('modal-uplata-iznos').focus(), 150);
+  }
+
+  function otvoriModalProduzenje(id, ime, dani) {
+    modalCtx = { id, ime };
+    document.getElementById('modal-produzenje-sub').textContent = `${ime} | Trenutno: ${dani} dan(a)`;
+    document.getElementById('modal-produzenje-dana').value = '';
+    document.getElementById('modal-produzenje-overlay').classList.add('open');
+    setTimeout(() => document.getElementById('modal-produzenje-dana').focus(), 150);
+  }
+
+  function zatvoriModal(tip) {
+    document.getElementById(`modal-${tip}-overlay`).classList.remove('open');
+  }
+
+  function otvoriModalObrisi(id, ime) {
+    modalCtx = { id, ime };
+    document.getElementById('modal-obrisi-warn').textContent = `Briše se: "${ime}". Ova akcija se ne može poništiti.`;
+    document.getElementById('modal-obrisi-overlay').classList.add('open');
+  }
+
+  async function potvrdiObrisanje() {
+    try {
+      const res = await fetch(`/api/red/${modalCtx.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        showNotif(`🗑️ "${modalCtx.ime}" obrisan.`);
+        zatvoriModal('obrisi');
+        await osvjeziListuDatuma();
+        ucitajPodatke();
+      } else { showNotif('❌ ' + (data.error || 'Greška'), true); }
+    } catch { showNotif('❌ Server nije dostupan.', true); }
+  }
+
+  function otvoriModalOcisti() {
+    const datum = lbDatumi[lbDatumIdx];
+    if (!datum) { showNotif('⚠️ Nema podataka za brisanje.', true); return; }
+    modalCtx = { datum };
+    document.getElementById('modal-ocisti-warn').innerHTML =
+      `Briše se <b style="color:var(--accent2)">svi redovi</b> za datum <b>${datum}</b>.<br/>Ova akcija se ne može poništiti.`;
+    document.getElementById('modal-ocisti-overlay').classList.add('open');
+  }
+
+  async function potvrdiOcistanje() {
+    try {
+      const res  = await fetch(`/api/datum/${modalCtx.datum}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        showNotif(`🗑️ Obrisani svi podaci za ${modalCtx.datum}.`);
+        zatvoriModal('ocisti');
+        await osvjeziListuDatuma();
+        lbDatumIdx = lbDatumi.length - 1;
+        ucitajPodatke();
+      } else { showNotif('❌ ' + (data.error || 'Greška'), true); }
+    } catch { showNotif('❌ Server nije dostupan.', true); }
+  }
+
+  async function potvrdiUplatu() {
+    const iznos = parseFloat(document.getElementById('modal-uplata-iznos').value);
+    const nap   = document.getElementById('modal-uplata-nap').value.trim();
+    if (isNaN(iznos) || iznos < 0) {
+      document.getElementById('modal-uplata-iznos').style.borderColor = 'var(--accent2)'; return;
+    }
+    try {
+      const res = await fetch('/api/update', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: modalCtx.id, tipAkcije: uplataTab === 'dodaj' ? 'uplata' : 'ispravi', iznosUplate: iznos, napomenaUplate: nap }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showNotif(uplataTab === 'ispravi' ? `✏️ Ispravka: ${iznos.toFixed(2)}€` : `✅ Uplata ${iznos.toFixed(2)}€ evidentirana!`);
+        zatvoriModal('uplata');
+        if (data.racunUrl) window.open(data.racunUrl, '_blank');
+        ucitajPodatke();
+      } else { showNotif('❌ ' + (data.error || 'Greška'), true); }
+    } catch { showNotif('❌ Server nije dostupan.', true); }
+  }
+
+  async function potvrdiProduzenje() {
+    const dana = parseInt(document.getElementById('modal-produzenje-dana').value);
+    if (!dana || dana < 1) {
+      document.getElementById('modal-produzenje-dana').style.borderColor = 'var(--accent2)'; return;
+    }
+    try {
+      const res = await fetch('/api/update', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: modalCtx.id, tipAkcije: 'produzenje', dodatniDani: dana }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showNotif(`✅ Produženo za ${dana} dan(a)!`);
+        zatvoriModal('produzenje');
+        ucitajPodatke();
+      } else { showNotif('❌ ' + (data.error || 'Greška'), true); }
+    } catch { showNotif('❌ Server nije dostupan.', true); }
+  }
+
+  function otvoriModalTablice(id, ime) {
+    modalCtx = { id, ime };
+    document.getElementById('modal-tablice-sub').textContent = `Gost: ${ime}`;
+    document.getElementById('modal-tablice-val').value = '';
+    document.getElementById('modal-tablice-overlay').classList.add('open');
+    setTimeout(() => document.getElementById('modal-tablice-val').focus(), 150);
+  }
+
+  async function potvrdiTablice() {
+    const t = document.getElementById('modal-tablice-val').value.trim().toUpperCase();
+    if (!t) { document.getElementById('modal-tablice-val').style.borderColor = 'var(--accent2)'; return; }
+    try {
+      const res = await fetch('/api/update', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: modalCtx.id, tipAkcije: 'tablice', tablice: t }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showNotif(`✅ Tablice ${t} sačuvane!`);
+        zatvoriModal('tablice');
+        ucitajPodatke();
+      } else { showNotif('❌ ' + (data.error || 'Greška'), true); }
+    } catch { showNotif('❌ Server nije dostupan.', true); }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      zatvoriLeaderboard();
+      zatvoriStatistiku();
+      ['uplata','produzenje','obrisi','ocisti','tablice'].forEach(t => zatvoriModal(t));
+    }
+    if (e.key === 'Enter') {
+      if (document.getElementById('modal-uplata-overlay').classList.contains('open'))    potvrdiUplatu();
+      if (document.getElementById('modal-produzenje-overlay').classList.contains('open')) potvrdiProduzenje();
+      if (document.getElementById('modal-tablice-overlay').classList.contains('open'))   potvrdiTablice();
+    }
+  });
+
+
+
+  function otvoriLeaderboard() {
+    document.getElementById('lb-overlay').classList.add('open');
+    document.getElementById('lb-panel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    ucitajLeaderboard();
+  }
+
+  function zatvoriLeaderboard() {
+    document.getElementById('lb-overlay').classList.remove('open');
+    document.getElementById('lb-panel').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // Idi na danas
+  async function idiNaDanas() {
+    await osvjeziListuDatuma();
+    lbDatumIdx = lbDatumi.length - 1;
+    ucitajDan(lbDatumi[lbDatumIdx] || null);
+  }
+
+  ['osobe','djeca','dani'].forEach(id =>
+    document.getElementById(id).addEventListener('input', () => { if (izracunatoUspjesno) izracunaj(); })
+  );
+  ['pas','sator'].forEach(id =>
+    document.getElementById(id).addEventListener('change', () => { if (izracunatoUspjesno) izracunaj(); })
+  );
+  document.querySelectorAll('input[name="vozilo"]').forEach(r =>
+    r.addEventListener('change', () => { if (izracunatoUspjesno) izracunaj(); })
+  );
+
+  // Enter na uplata-iznos
+  document.getElementById('uplata-iznos').addEventListener('keydown', e => {
+    if (e.key === 'Enter') dodajUplatu();
+  });
+</script>
+</body>
+</html>

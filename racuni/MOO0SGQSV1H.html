@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Račun MOO0SGQSV1H — benjamin</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px; color: #1a1a1a;
+    background: #fff; padding: 0;
+  }
+  .racun {
+    max-width: 420px; margin: 0 auto;
+    padding: 24px 28px 32px;
+  }
+
+  /* ── Header ── */
+  .header { text-align: center; padding-bottom: 16px; border-bottom: 2px solid #1a1a1a; margin-bottom: 16px; }
+  .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .header .subtitle { font-size: 11px; color: #666; margin-top: 2px; }
+  .header .racun-id { font-size: 10px; color: #999; margin-top: 6px; font-family: monospace; }
+
+  /* ── Info gosta ── */
+  .gost-info { margin-bottom: 16px; }
+  .gost-info h2 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+  .info-red { font-size: 12px; }
+  .info-red .lbl { color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; display: block; }
+  .info-red .val { font-weight: 600; }
+
+  /* ── Divider ── */
+  .divider { border: none; border-top: 1px dashed #ccc; margin: 14px 0; }
+
+  /* ── Stavke ── */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #888;
+       padding: 4px 0; border-bottom: 1px solid #ddd; text-align: left; }
+  td { padding: 7px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; vertical-align: top; }
+  .center { text-align: center; }
+  .right  { text-align: right; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── Totals ── */
+  .totals { border-top: 2px solid #1a1a1a; padding-top: 10px; }
+  .total-red { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 0; font-size: 12px; }
+  .total-red.big { font-size: 16px; font-weight: 800; padding: 6px 0 4px; }
+  .total-red.bam { font-size: 11px; color: #666; }
+  .total-red.placeno { color: #16a34a; font-weight: 600; }
+  .total-red.ostatak { color: #dc2626; font-weight: 700; font-size: 14px; }
+  .total-red.ostatak-0 { color: #16a34a; font-weight: 700; font-size: 14px; }
+  .muted { color: #999; }
+
+  /* ── Status badge ── */
+  .status-badge {
+    display: inline-block; padding: 4px 12px; border-radius: 100px;
+    font-size: 11px; font-weight: 700; margin: 10px 0;
+    background: #22c55e18; color: #22c55e;
+    border: 1px solid #22c55e40;
+  }
+
+  /* ── Uplate ── */
+  .uplate-section { margin: 12px 0; }
+  .uplate-section h3 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 6px; }
+  .uplata-red { font-size: 11px; color: #444; padding: 2px 0; }
+  .nova-uplata {
+    background: #f0fdf4; border: 1px solid #86efac;
+    border-radius: 6px; padding: 8px 12px; margin: 10px 0;
+    font-size: 12px; color: #166534;
+  }
+
+  /* ── Footer ── */
+  .footer { text-align: center; margin-top: 20px; padding-top: 14px; border-top: 1px dashed #ccc; }
+  .footer .hvala { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .footer .info  { font-size: 10px; color: #999; line-height: 1.6; }
+  .footer .datum-stampe { font-size: 10px; color: #bbb; margin-top: 8px; }
+
+  /* ── Print ── */
+  @media print {
+    body { padding: 0; }
+    .racun { max-width: 100%; padding: 8px; }
+    .no-print { display: none !important; }
+    @page { margin: 8mm; size: 80mm auto; }
+  }
+
+  /* ── Print dugme ── */
+  .print-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #1a1a1a; padding: 12px 20px;
+    display: flex; gap: 10px; justify-content: center;
+    z-index: 100;
+  }
+  .btn-print {
+    background: #f5a623; color: #000; border: none;
+    font-weight: 800; font-size: 14px; padding: 10px 28px;
+    border-radius: 8px; cursor: pointer; font-family: inherit;
+  }
+  .btn-print:hover { background: #fbb740; }
+  .btn-close {
+    background: #333; color: #fff; border: none;
+    font-weight: 600; font-size: 13px; padding: 10px 20px;
+    border-radius: 8px; cursor: pointer; font-family: inherit;
+  }
+  .btn-close:hover { background: #444; }
+</style>
+</head>
+<body>
+
+<div class="racun">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🏕️ KAMPING</h1>
+    <div class="subtitle">Potvrda o boravku / Receipt</div>
+    <div class="racun-id">Br. računa: MOO0SGQSV1H &nbsp;|&nbsp; 2026-05-02</div>
+  </div>
+
+  <!-- Gost -->
+  <div class="gost-info">
+    <h2>benjamin</h2>
+    <div class="info-grid">
+      <div class="info-red"><span class="lbl">Država</span><span class="val">njemacka</span></div>
+      <div class="info-red"><span class="lbl">Tablice</span><span class="val">DA1</span></div>
+      <div class="info-red"><span class="lbl">Vozilo</span><span class="val">Auto</span></div>
+      <div class="info-red"><span class="lbl">Broj dana</span><span class="val">1 dan(a)</span></div>
+      <div class="info-red"><span class="lbl">Dolazak</span><span class="val">2026-05-02</span></div>
+      <div class="info-red"><span class="lbl">Putnici</span><span class="val">2 odraslih</span></div>
+    </div>
+    
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- Stavke -->
+  <table>
+    <thead>
+      <tr>
+        <th>Stavka</th>
+        <th class="center">Kol.</th>
+        <th class="right">Cijena</th>
+        <th class="right">Iznos</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+    <tr>
+      <td>Vozilo — Auto</td>
+      <td class="center">1 dan</td>
+      <td class="right">5.00 €</td>
+      <td class="right">5.00 €</td>
+    </tr>
+    <tr>
+      <td>Odrasli (2 os.)</td>
+      <td class="center">1 dan</td>
+      <td class="right">10.00 €</td>
+      <td class="right">10.00 €</td>
+    </tr>
+    </tbody>
+  </table>
+
+  <!-- Ukupno -->
+  <div class="totals">
+    <div class="total-red big">
+      <span>UKUPNO</span>
+      <span>15.00 €</span>
+    </div>
+    <div class="total-red bam">
+      <span></span>
+      <span>29.34 KM</span>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- Plaćanje -->
+  <div class="uplate-section">
+    <h3>Historija plaćanja</h3>
+    <div class="uplata-red">✓ 1. 15.00€ (05-02 09:28)</div>
+    
+  </div>
+
+  <div class="totals">
+    <div class="total-red placeno">
+      <span>Plaćeno</span>
+      <span>+ 15.00 € &nbsp;(29.34 KM)</span>
+    </div>
+    <div class="total-red ostatak-0">
+      <span>Ostatak</span>
+      <span>0.00 € ✅</span>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin:10px 0;">
+    <span class="status-badge">Plaćeno ✅</span>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="hvala">Hvala na posjeti! 🙏</div>
+    <div class="info">
+      Kurs: 1 € = 1.95583 KM (fiksni)<br/>
+      Račun br: MOO0SGQSV1H
+    </div>
+    <div class="datum-stampe">Štampano: 02. 05. 2026. u 09:28</div>
+  </div>
+
+</div>
+
+<!-- Print bar -->
+<div class="print-bar no-print">
+  <button class="btn-print" onclick="window.print()">🖨️ Štampaj / Print</button>
+  <button class="btn-close" onclick="window.close()">✕ Zatvori</button>
+</div>
+
+<script>
+  // Auto-print opcija (zakomentariši ako ne trebaš)
+  // window.onload = () => setTimeout(() => window.print(), 500);
+</script>
+</body>
+</html>

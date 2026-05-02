@@ -1,0 +1,17 @@
+{
+  "vozilo": {
+    "auto": 5,
+    "motor": 3,
+    "auto_sator": 10,
+    "van": 15,
+    "van_l": 20,
+    "auto_karavan": 20,
+    "motohome": 20
+  },
+  "opcije": {
+    "osoba": 5,
+    "dijete": 2.5,
+    "pas": 2,
+    "sator": 5
+  }
+}
