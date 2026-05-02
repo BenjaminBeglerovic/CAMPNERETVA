@@ -1,7 +1,4 @@
-{
-"scripts": {
-  "start": "node server.js"
-}
+
 
 {
   "name": "kalkulator-cijena",
