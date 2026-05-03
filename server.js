@@ -1291,6 +1291,15 @@ function generirajRacunGrupe({ grupaId, naziv, drzava, tip, dani, pas, sator, ko
 </body>
 </html>`;
 }
+app.get('/racun/:id', async (req, res) => {
+  const id = req.params.id;
+  const filePath = path.join(RACUNI_DIR, `racun_${id}.html`);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).send('❌ Račun nije pronađen');
+  }
+
+  res.sendFile(filePath);}
 
 app.listen(PORT, () => {
   console.log(`\n╔══════════════════════════════════════════════════════╗`);
