@@ -297,7 +297,7 @@ function generirajRacun(podaci) {
     border-bottom: 2px solid #111;
     margin-bottom: 3mm;
   }
-  .hdr img.logo { width:22mm; height:22mm; object-fit:contain; }
+  .hdr img.logo { width:22mm; height:22mm; object-fit:contain; mix-blend-mode:multiply; }
   .hdr-mid { text-align:center; }
   .hdr-mid h1 { font-size:13pt; font-weight:900; text-transform:uppercase; color:#1a5c2a; letter-spacing:.5px; }
   .hdr-mid .sub { font-size:7pt; color:#777; margin-top:1mm; }
@@ -366,9 +366,9 @@ function generirajRacun(podaci) {
   .footer .thanks { font-size:9pt; font-weight:700; color:#1a5c2a; grid-column:1/-1; text-align:center; margin-bottom:2mm; }
   .footer .fc { color:#666; line-height:1.6; }
 
-  /* Signatures */
-  .sigs { display:grid; grid-template-columns:1fr 1fr; gap:5mm; margin-top:3mm; padding-top:2.5mm; border-top:1px solid #ddd; }
-  .sig-box { text-align:center; }
+  /* Signature */
+  .sigs { display:flex; gap:5mm; margin-top:3mm; padding-top:2.5mm; border-top:1px solid #ddd; justify-content:flex-end; }
+  .sig-box { width:60mm; text-align:center; }
   .sig-line { border-bottom:1px solid #aaa; height:7mm; margin-bottom:1.2mm; }
   .sig-lbl { font-size:6.5pt; color:#888; }
 
@@ -382,6 +382,10 @@ function generirajRacun(podaci) {
     html, body { background:none !important; padding:0 !important; display:block !important; }
     .pbar { display:none !important; }
     .racun { box-shadow:none !important; width:100% !important; padding:0 !important; }
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .hdr-mid h1 { font-size:11pt !important; }
+    .frow.big .val { font-size:13pt !important; }
+    .cols, .tbl-wrap, .fin, .footer { margin-bottom:2mm !important; }
   }
 </style>
 </head>
@@ -485,15 +489,12 @@ function generirajRacun(podaci) {
     </div>
   </div>
 
-  <!-- Signatures -->
+  <!-- Signature -->
   <div class="sigs">
-    <div class="sig-box">
+    <div style="flex:1"></div>
+    <div class="sig-box" style="flex:1">
       <div class="sig-line"></div>
-      <div class="sig-lbl">Guest signature</div>
-    </div>
-    <div class="sig-box">
-      <div class="sig-line"></div>
-      <div class="sig-lbl">Staff signature</div>
+      <div class="sig-lbl">Receptionist signature</div>
     </div>
   </div>
 
