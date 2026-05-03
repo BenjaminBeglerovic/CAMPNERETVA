@@ -159,14 +159,34 @@ function generirajRacun(podaci) {
   .btn-p.close { background:#333; color:#fff; }
 
   /* ── Print media ───────────────────── */
+  @page {
+    size: A6 portrait;
+    margin: 4mm;
+  }
+
   @media print {
-    body { background:none; padding:0; display:block; }
-    .print-bar { display:none !important; }
-    .racun {
-      box-shadow:none; border-radius:0;
-      width:100%; padding:4mm 5mm;
+    html, body {
+      width: 105mm;
+      height: 148mm;
+      background: none !important;
+      padding: 0 !important;
+      display: block !important;
     }
-    @page { size:A6; margin:4mm; }
+    .print-bar { display: none !important; }
+    .racun {
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      width: 100% !important;
+      padding: 3mm 4mm !important;
+      margin: 0 !important;
+      font-size: 8.5pt !important;
+    }
+    table td, table th { padding: 1mm 0 !important; }
+    .row { margin: 0.8mm 0 !important; }
+    .ukupno .row { margin: 1mm 0 !important; }
+    hr { margin: 2mm 0 !important; }
+    .logo { margin-bottom: 3mm !important; }
+    .footer { margin-top: 3mm !important; }
   }
 </style>
 </head>
