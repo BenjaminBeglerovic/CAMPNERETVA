@@ -393,7 +393,7 @@ function generirajRacun(podaci) {
     background:#1a5c2a; color:#fff; border:none; border-radius:4px;
     padding:2mm 3mm; cursor:pointer; width:100%;
   }
-  .extended-note { display:none; font-size:7pt; color:#15803d; font-weight:700; margin-top:1mm; text-align:center; }
+  .extended-note { display:none; font-size:7pt; color:#15803d; margin-top:1.5mm; text-align:center; line-height:1.5; }
   @media print { .checkout-box { background:#f0f7f0 !important; border-color:#1a5c2a !important; } .timer-wrap { display:none; } }
   .pbar { position:fixed; bottom:0; left:0; right:0; background:#111; padding:10px; display:flex; gap:10px; justify-content:center; z-index:999; }
   .btn-p { font-size:13px; font-weight:700; padding:9px 24px; border:none; border-radius:6px; cursor:pointer; font-family:Arial; }
@@ -586,9 +586,9 @@ function generirajRacun(podaci) {
     .then(data => {
       if (data.success) {
         checkoutMs += 86400000;
-        btnEl.classList.remove('visible');
+        btnEl.style.display  = 'none';
         noteEl.style.display = 'block';
-        noteEl.textContent   = 'Stay extended by 1 day!';
+        noteEl.innerHTML     = '✅ Stay extended by 1 day!<br><strong style="color:#b45309">Please visit reception to make payment.</strong>';
         const newDate = new Date(checkoutMs);
         document.getElementById('co-date-str').textContent =
           day_names[newDate.getDay()] + ', ' +
