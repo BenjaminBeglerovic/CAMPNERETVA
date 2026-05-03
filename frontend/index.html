@@ -1514,14 +1514,18 @@
 
   /* Štampanje */
   @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body > *:not(#iv-panel) { display:none !important; }
-    #iv-panel { position:static !important; width:100% !important; box-shadow:none !important; }
+    #iv-panel { position:static !important; width:100% !important; box-shadow:none !important; background:#fff !important; }
     #iv-overlay, .lb-close, .lb-header .lb-refresh, #iv-privremeni-range { display:none !important; }
     .iv-tab, .lb-refresh { display:none !important; }
     .iv-table td, .iv-table th { color:#000 !important; border-color:#ccc !important; }
-    .iv-kpi-card { background:#fff !important; border:1px solid #ccc !important; }
-    .iv-kpi-val, .iv-kpi-lbl { color:#000 !important; }
-    @page { margin:12mm; size:A4; }
+    .iv-table thead th { background:#1a5c2a !important; color:#fff !important; }
+    .iv-table tbody tr:nth-child(even) { background:#f5f5f5 !important; }
+    .iv-kpi-card { background:#f0f7f0 !important; border:1px solid #1a5c2a !important; }
+    .iv-kpi-val { color:#1a5c2a !important; }
+    .iv-kpi-lbl { color:#333 !important; }
+    @page { margin:10mm; size:A4; }
   }
 </style>
 
