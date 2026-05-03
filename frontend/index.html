@@ -788,6 +788,15 @@
   <span>Izvještaji</span>
 </button>
 
+<button class="lb-trigger" id="ob-trigger" onclick="otvoriObavijesti()" title="Obavijesti" style="right:auto;left:456px;position:relative;">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+  </svg>
+  <span>Obavijesti</span>
+  <span id="ob-badge" style="display:none;position:absolute;top:6px;right:6px;background:#dc2626;color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:16px;height:16px;line-height:16px;text-align:center;">0</span>
+</button>
+
 <!-- ── Leaderboard overlay ────────────────────────────────── -->
 <div class="lb-overlay" id="lb-overlay" onclick="zatvoriLeaderboard()"></div>
 
@@ -1527,6 +1536,37 @@
     .iv-kpi-lbl { color:#333 !important; }
     @page { margin:10mm; size:A4; }
   }
+</style>
+
+<!-- ── Obavijesti overlay + panel ─────────────────────────── -->
+<style>
+  #ob-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:none;opacity:0;transition:opacity .25s; }
+  #ob-overlay.open { display:block;opacity:1; }
+  #ob-panel { position:fixed;top:0;right:0;width:420px;max-width:100vw;height:100vh;background:var(--card,#1e1e1e);z-index:1001;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-4px 0 30px rgba(0,0,0,0.4); }
+  #ob-panel.open { transform:translateX(0); }
+  .ob-header { padding:20px 24px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between; }
+  .ob-title { font-size:18px;font-weight:700;color:#fff; }
+  .ob-actions { display:flex;gap:8px;align-items:center; }
+  .ob-clear-btn { font-size:11px;background:rgba(220,38,38,0.15);color:#f87171;border:1px solid rgba(220,38,38,0.3);border-radius:6px;padding:5px 10px;cursor:pointer; }
+  .ob-clear-btn:hover { background:rgba(220,38,38,0.25); }
+  .ob-close { background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:22px;line-height:1;padding:0 4px; }
+  .ob-body { flex:1;overflow-y:auto;padding:16px; }
+  .ob-empty { text-align:center;padding:60px 20px;color:rgba(255,255,255,0.3); }
+  .ob-empty svg { margin-bottom:12px;opacity:0.3; }
+  .ob-empty p { font-size:14px; }
+  .ob-card { background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:background .2s;position:relative; }
+  .ob-card:hover { background:rgba(255,255,255,0.09); }
+  .ob-card.neprocitano { border-left:3px solid #f59e0b; }
+  .ob-card.procitano { opacity:0.6; }
+  .ob-card-top { display:flex;align-items:center;gap:10px;margin-bottom:6px; }
+  .ob-icon { width:32px;height:32px;border-radius:50%;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .ob-card-ime { font-weight:700;font-size:14px;color:#fff;flex:1; }
+  .ob-card-time { font-size:11px;color:rgba(255,255,255,0.4); }
+  .ob-card-msg { font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5; }
+  .ob-card-footer { margin-top:8px;display:flex;gap:8px; }
+  .ob-btn-view { font-size:11px;background:rgba(26,92,42,0.3);color:#4ade80;border:1px solid rgba(26,92,42,0.5);border-radius:5px;padding:4px 10px;cursor:pointer; }
+  .ob-btn-del { font-size:11px;background:rgba(220,38,38,0.1);color:#f87171;border:1px solid rgba(220,38,38,0.2);border-radius:5px;padding:4px 10px;cursor:pointer;margin-left:auto; }
+  .ob-dot { width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0; }
 </style>
 
 <script>
@@ -2867,6 +2907,127 @@
   document.getElementById('uplata-iznos').addEventListener('keydown', e => {
     if (e.key === 'Enter') dodajUplatu();
   });
+</script>
+
+<!-- ── Obavijesti panel ── -->
+<div id="ob-overlay" onclick="zatvoriObavijesti()"></div>
+<div id="ob-panel">
+  <div class="ob-header">
+    <div class="ob-title">🔔 Obavijesti</div>
+    <div class="ob-actions">
+      <button class="ob-clear-btn" onclick="obrisiSveObavijesti()">Obriši sve</button>
+      <button class="ob-close" onclick="zatvoriObavijesti()">✕</button>
+    </div>
+  </div>
+  <div class="ob-body" id="ob-body">
+    <div class="ob-empty">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <p>Nema obavijesti</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ OBAVIJESTI ════════════════════════════════════════════
+let obavijesti = [];
+
+function otvoriObavijesti() {
+  document.getElementById('ob-overlay').classList.add('open');
+  document.getElementById('ob-panel').classList.add('open');
+  ucitajObavijesti();
+}
+function zatvoriObavijesti() {
+  document.getElementById('ob-overlay').classList.remove('open');
+  document.getElementById('ob-panel').classList.remove('open');
+}
+
+async function ucitajObavijesti() {
+  try {
+    const res = await fetch('/api/notifikacije');
+    obavijesti = await res.json();
+    renderObavijesti();
+    azurirajBadge();
+  } catch {}
+}
+
+function renderObavijesti() {
+  const body = document.getElementById('ob-body');
+  if (!obavijesti.length) {
+    body.innerHTML = `<div class="ob-empty">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <p>Nema obavijesti</p></div>`;
+    return;
+  }
+  body.innerHTML = obavijesti.map(n => `
+    <div class="ob-card ${n.procitano ? 'procitano' : 'neprocitano'}" id="ob-card-${n.id}">
+      <div class="ob-card-top">
+        <div class="ob-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </div>
+        <div class="ob-card-ime">${n.gostIme}</div>
+        ${!n.procitano ? '<div class="ob-dot"></div>' : ''}
+        <div class="ob-card-time">${n.vrijemeNotif || ''}</div>
+      </div>
+      <div class="ob-card-msg">${n.poruka}</div>
+      <div class="ob-card-footer">
+        <button class="ob-btn-view" onclick="idiNaGosta('${n.id}', '${n.gostId}', '${n.gostIme}')">👤 Prikaži gosta</button>
+        <button class="ob-btn-del" onclick="obrisiObavijest('${n.id}')">Obriši</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function idiNaGosta(notifId, gostId, gostIme) {
+  // Označi kao pročitano
+  await fetch(`/api/notifikacije/${notifId}/procitaj`, { method: 'PUT' });
+  const card = document.getElementById(`ob-card-${notifId}`);
+  if (card) { card.classList.remove('neprocitano'); card.classList.add('procitano'); }
+  const n = obavijesti.find(x => x.id === notifId);
+  if (n) n.procitano = true;
+  azurirajBadge();
+  zatvoriObavijesti();
+
+  // Pretraži gosta u tabeli
+  const searchInput = document.getElementById('search');
+  if (searchInput) {
+    searchInput.value = gostIme.split('(')[0].trim(); // bez grupnih zagrada
+    if (typeof ucitajPodatke === 'function') ucitajPodatke();
+    else if (typeof osvjeziTabelu === 'function') osvjeziTabelu();
+  }
+  // Otvori leaderboard panel ako nije otvoren
+  const panel = document.getElementById('lb-panel');
+  if (panel && !panel.classList.contains('open')) {
+    if (typeof otvoriLeaderboard === 'function') otvoriLeaderboard();
+  }
+}
+
+async function obrisiObavijest(id) {
+  await fetch(`/api/notifikacije/${id}`, { method: 'DELETE' });
+  obavijesti = obavijesti.filter(n => n.id !== id);
+  renderObavijesti();
+  azurirajBadge();
+}
+
+async function obrisiSveObavijesti() {
+  if (!confirm('Obrisati sve obavijesti?')) return;
+  await fetch('/api/notifikacije', { method: 'DELETE' });
+  obavijesti = [];
+  renderObavijesti();
+  azurirajBadge();
+}
+
+function azurirajBadge() {
+  const neprocitane = obavijesti.filter(n => !n.procitano).length;
+  const badge = document.getElementById('ob-badge');
+  if (badge) {
+    if (neprocitane > 0) { badge.style.display = 'block'; badge.textContent = neprocitane > 9 ? '9+' : neprocitane; }
+    else { badge.style.display = 'none'; }
+  }
+}
+
+// Provjeri obavijesti svake minute
+ucitajObavijesti();
+setInterval(ucitajObavijesti, 60000);
 </script>
 </body>
 </html>
