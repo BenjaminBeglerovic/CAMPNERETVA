@@ -19,7 +19,7 @@ if (!fs.existsSync(DATA_DIR)) { fs.mkdirSync(DATA_DIR); }
 const RACUNI_DIR = path.join(__dirname, 'racuni');
 if (!fs.existsSync(RACUNI_DIR)) { fs.mkdirSync(RACUNI_DIR); console.log('📁 Kreiran folder: racuni/'); }
 
-// ─── Generator HTML računa ────────────────────────────────────────
+// ─── Generator HTML računa (A6 format) ───────────────────────────
 function generirajRacun(podaci) {
   const {
     id, ime, drzava, tablice, vozilo, osobe, djeca, pas, sator,
@@ -29,410 +29,222 @@ function generirajRacun(podaci) {
   } = podaci;
 
   const placenoBAM = parseFloat((placenoEUR * EUR_BAM).toFixed(2));
-  const ostatakBAM = parseFloat((ostatakEUR * EUR_BAM).toFixed(2));
+  const ostatakBAM = parseFloat((ostatakEUR  * EUR_BAM).toFixed(2));
   const bamTotal   = parseFloat((eur * EUR_BAM).toFixed(2));
 
-  const statusBoja  = status?.includes('✅') ? '#3ecf8e'
-                    : status?.includes('Djelim') ? '#f5a623' : '#e8534a';
-  const statusBg    = status?.includes('✅') ? 'rgba(62,207,142,0.12)'
-                    : status?.includes('Djelim') ? 'rgba(245,166,35,0.12)' : 'rgba(232,83,74,0.12)';
-  const statusBorder= status?.includes('✅') ? 'rgba(62,207,142,0.3)'
-                    : status?.includes('Djelim') ? 'rgba(245,166,35,0.3)' : 'rgba(232,83,74,0.3)';
-
-  const cijenaVozilo = podaci.cijenaOsoba != null
+  // Stavke
+  const stavke = [];
+  const cijVoz = podaci.cijenaOsoba != null
     ? (eur/dani - osobe*(podaci.cijenaOsoba||5) - djeca*(podaci.cijaneDijete||2.5)
        - pas*(podaci.cijanePas||2) - sator*(podaci.cijaneSator||5))
     : eur/dani;
-  const stavke = [];
-  stavke.push({ naziv: `Vozilo — ${vozilo}`, kol: dani, jed: 'dan', cij: parseFloat(cijenaVozilo.toFixed(2)) });
-  if (osobe > 0) stavke.push({ naziv: `Odrasli (${osobe} os.)`, kol: dani, jed: 'dan', cij: parseFloat(((podaci.cijenaOsoba||5)*osobe).toFixed(2)) });
-  if (djeca  > 0) stavke.push({ naziv: `Djeca (${djeca})`, kol: dani, jed: 'dan', cij: parseFloat(((podaci.cijaneDijete||2.5)*djeca).toFixed(2)) });
-  if (pas   > 0) stavke.push({ naziv: `Psi 🐕 (${pas}×)`,   kol: dani, jed: 'dan', cij: (podaci.cijanePas||2)*pas });
-  if (sator > 0) stavke.push({ naziv: `Šatori ⛺ (${sator}×)`, kol: dani, jed: 'dan', cij: (podaci.cijaneSator||5)*sator });
+  stavke.push([vozilo, dani, parseFloat(cijVoz.toFixed(2))]);
+  if (osobe > 0) stavke.push([`Odrasli ×${osobe}`, dani, (podaci.cijenaOsoba||5)*osobe]);
+  if (djeca  > 0) stavke.push([`Djeca ×${djeca}`,  dani, (podaci.cijaneDijete||2.5)*djeca]);
+  if (pas    > 0) stavke.push([`Pas ×${pas}`,       dani, (podaci.cijanePas||2)*pas]);
+  if (sator  > 0) stavke.push([`Šator ×${sator}`,   dani, (podaci.cijaneSator||5)*sator]);
 
-  const stavkeHTML = stavke.map((s,i) => `
-    <tr class="${i%2===0?'row-even':'row-odd'}">
-      <td class="td-naziv">${s.naziv}</td>
-      <td class="td-center">${s.kol} ${s.jed}</td>
-      <td class="td-right">${s.cij.toFixed(2)} €</td>
-      <td class="td-right td-iznos">${(s.cij*s.kol).toFixed(2)} €</td>
-    </tr>`).join('');
+  const stavkeHTML = stavke.map(([n, d, c]) =>
+    `<tr><td>${n}</td><td class="r">${d}d</td><td class="r"><b>${(c*d).toFixed(2)}</b></td></tr>`
+  ).join('');
 
+  // Uplata historija
   const uplateHTML = (uplate && uplate !== '—')
-    ? uplate.split('\n').map(u => `<div class="uplata-red">✓ ${u}</div>`).join('')
-    : '<div class="uplata-red muted">—</div>';
+    ? uplate.split('\n').map(u => `<div class="ul">${u}</div>`).join('')
+    : '';
 
-  const novaUplataHTML = uplataIznos ? `
-    <div class="nova-uplata">
-      <span class="nova-znak">↳</span>
-      <strong>${parseFloat(uplataIznos).toFixed(2)} €</strong>
-      ${uplataNapomena ? `<span class="muted"> — ${uplataNapomena}</span>` : ''}
-      <span class="muted"> (${uplataVrijeme || ts})</span>
-    </div>` : '';
+  const novaUplataHTML = uplataIznos
+    ? `<div class="ul new">+ ${parseFloat(uplataIznos).toFixed(2)} €${uplataNapomena ? ' — '+uplataNapomena : ''} (${uplataVrijeme||ts})</div>`
+    : '';
 
   const sada = new Date().toLocaleString('bs-BA', {
     day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit',
   });
+
+  const [gy,gm,gd] = datum.split('-');
+  const datumPrikaz = `${gd}.${gm}.${gy}`;
+
+  const statusBoja = status?.includes('✅') ? '#16a34a' : status?.includes('Djelim') ? '#b45309' : '#dc2626';
 
   return `<!DOCTYPE html>
 <html lang="bs">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Račun ${id} — ${ime}</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<title>Račun ${id}</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing:border-box; margin:0; padding:0; }
 
-  :root {
-    --bg:      #0b0c0e;
-    --surface: #13151a;
-    --card:    #1a1d24;
-    --border:  #252830;
-    --accent:  #f5a623;
-    --green:   #3ecf8e;
-    --blue:    #5b9cf6;
-    --red:     #e8534a;
-    --text:    #eceef2;
-    --muted:   #6b7280;
-    --sub:     #9ca3af;
-  }
-
+  /* ── Screen prikaz ────────────────── */
   body {
-    font-family: 'DM Sans', 'Segoe UI', sans-serif;
-    background: var(--bg);
-    color: var(--text);
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    background: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     min-height: 100vh;
-    padding-bottom: 80px;
+    padding: 24px 16px 100px;
+    color: #111;
   }
 
-  .wrap {
-    max-width: 560px;
-    margin: 0 auto;
-    padding: 40px 32px 48px;
+  .racun {
+    background: #fff;
+    width: 105mm;
+    padding: 8mm 8mm 10mm;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+    border-radius: 4px;
   }
 
-  /* ── Header ───────────────────────────────────── */
-  .header {
-    text-align: center;
-    padding-bottom: 28px;
-    margin-bottom: 28px;
-    border-bottom: 1px solid var(--border);
-    position: relative;
-  }
-  .header::after {
-    content: '';
-    position: absolute;
-    bottom: -1px; left: 50%; transform: translateX(-50%);
-    width: 60px; height: 2px;
-    background: var(--accent);
-  }
-  .logo-icon { font-size: 36px; margin-bottom: 8px; display: block; }
-  .header h1 {
-    font-family: 'Syne', sans-serif;
-    font-size: 26px; font-weight: 800;
-    letter-spacing: -0.5px;
-    color: var(--text);
-    margin-bottom: 4px;
-  }
-  .header .subtitle {
-    font-size: 12px; color: var(--muted);
-    letter-spacing: 0.5px; text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-  .racun-id-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 100px; padding: 5px 14px;
-    font-size: 11px; color: var(--muted);
-    font-family: 'DM Mono', monospace;
-  }
-  .racun-id-badge strong { color: var(--accent); font-size: 12px; }
+  /* ── Zaglavlje ─────────────────────── */
+  .logo { text-align:center; margin-bottom:5mm; }
+  .logo h1 { font-size:15pt; font-weight:900; letter-spacing:1px; text-transform:uppercase; }
+  .logo p  { font-size:7.5pt; color:#555; margin-top:1mm; }
 
-  /* ── Gost info ────────────────────────────────── */
-  .gost-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; padding: 22px 24px; margin-bottom: 20px;
-    position: relative; overflow: hidden;
-  }
-  .gost-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--accent), transparent);
-  }
-  .gost-name {
-    font-family: 'Syne', sans-serif;
-    font-size: 20px; font-weight: 800;
-    color: var(--text); margin-bottom: 16px;
-    letter-spacing: -0.3px;
-  }
-  .info-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 12px 24px;
-  }
-  .info-item {}
-  .info-item .lbl {
-    font-size: 10px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 1px;
-    color: var(--muted); margin-bottom: 3px; display: block;
-  }
-  .info-item .val {
-    font-size: 14px; font-weight: 600; color: var(--text);
-  }
-  .komentar-box {
-    margin-top: 14px; padding: 10px 14px;
-    background: var(--surface); border-radius: 8px;
-    border-left: 2px solid var(--border);
-    font-size: 12px; color: var(--sub); font-style: italic;
+  hr { border:none; border-top:1px solid #ccc; margin:3mm 0; }
+  hr.thick { border-top:2px solid #111; }
+  hr.dashed { border-top:1px dashed #ccc; }
+
+  /* ── Info red ──────────────────────── */
+  .row { display:flex; justify-content:space-between; margin:1.2mm 0; font-size:9pt; }
+  .row .l { color:#444; }
+  .row .r { font-weight:700; text-align:right; }
+
+  /* ── Stavke tabela ─────────────────── */
+  table { width:100%; border-collapse:collapse; margin:2mm 0; font-size:9pt; }
+  table th { font-size:7.5pt; text-transform:uppercase; color:#777; padding:1mm 0; border-bottom:1px solid #ddd; text-align:left; }
+  table th.r, table td.r { text-align:right; }
+  table td { padding:1.5mm 0; border-bottom:1px solid #f0f0f0; }
+  table tr:last-child td { border-bottom:none; }
+  table td b { font-weight:700; }
+
+  /* ── Ukupno blok ───────────────────── */
+  .ukupno { margin:3mm 0 2mm; }
+  .ukupno .row { margin:1.5mm 0; }
+  .ukupno .big { font-size:14pt; font-weight:900; }
+  .ukupno .bam { font-size:9pt; color:#555; font-weight:400; }
+
+  /* ── Status ────────────────────────── */
+  .status {
+    text-align:center; margin:3mm 0;
+    font-size:9pt; font-weight:700;
+    padding:2mm 4mm; border-radius:2px;
+    color: ${statusBoja};
+    border: 1px solid ${statusBoja}55;
+    background: ${statusBoja}11;
+    display:inline-block; width:100%;
   }
 
-  /* ── Stavke ───────────────────────────────────── */
-  .section-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 2px; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 12px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .section-title::after {
-    content: ''; flex: 1; height: 1px; background: var(--border);
-  }
+  /* ── Uplata historija ──────────────── */
+  .ul { font-size:8pt; color:#444; margin:1mm 0; padding-left:2mm; border-left:2px solid #ddd; }
+  .ul.new { border-color:#16a34a; color:#166534; }
 
-  .stavke-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; overflow: hidden; margin-bottom: 20px;
-  }
-  table { width: 100%; border-collapse: collapse; }
-  thead tr {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-  }
-  th {
-    font-size: 10px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 1px;
-    color: var(--muted); padding: 12px 16px; text-align: left;
-  }
-  .row-even { background: var(--card); }
-  .row-odd  { background: rgba(255,255,255,0.015); }
-  td { padding: 13px 16px; border-bottom: 1px solid var(--border); }
-  tr:last-child td { border-bottom: none; }
-  .td-naziv  { font-size: 14px; font-weight: 500; color: var(--text); }
-  .td-center { text-align: center; font-size: 13px; color: var(--sub); }
-  .td-right  { text-align: right; font-size: 13px; color: var(--sub); }
-  .td-iznos  { font-weight: 700; font-size: 14px; color: var(--text); }
+  /* ── Footer ────────────────────────── */
+  .footer { text-align:center; margin-top:4mm; }
+  .footer .hvala { font-size:10pt; font-weight:700; margin-bottom:1mm; }
+  .footer small { font-size:7.5pt; color:#777; display:block; line-height:1.5; }
 
-  /* ── Totals ───────────────────────────────────── */
-  .totals-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; overflow: hidden; margin-bottom: 20px;
-  }
-  .total-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 20px; border-bottom: 1px solid var(--border);
-  }
-  .total-row:last-child { border-bottom: none; }
-  .total-row .lbl { font-size: 13px; color: var(--sub); font-weight: 500; }
-  .total-row .val { font-size: 14px; font-weight: 700; color: var(--text); }
-  .total-row.big   { background: var(--surface); padding: 18px 20px; }
-  .total-row.big .lbl { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--text); letter-spacing: 0.5px; }
-  .total-row.big .val { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--accent); }
-  .total-row.bam .val { color: var(--blue); font-size: 13px; }
-  .total-row.placeno .val { color: var(--green); }
-  .total-row.placeno .lbl { color: var(--green); }
-  .total-row.ostatak .val { color: var(--red); font-size: 16px; }
-  .total-row.ostatak .lbl { color: var(--red); font-weight: 600; }
-  .total-row.ostatak-0 .val { color: var(--green); font-size: 16px; }
-  .total-row.ostatak-0 .lbl { color: var(--green); font-weight: 600; }
-
-  /* ── Status ───────────────────────────────────── */
-  .status-wrap { text-align: center; margin: 6px 0 20px; }
-  .status-badge {
-    display: inline-block; padding: 8px 22px; border-radius: 100px;
-    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800;
-    background: ${statusBg}; color: ${statusBoja};
-    border: 1px solid ${statusBorder}; letter-spacing: 0.3px;
-  }
-
-  /* ── Uplate ───────────────────────────────────── */
-  .uplate-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; padding: 18px 20px; margin-bottom: 20px;
-  }
-  .uplata-red {
-    font-size: 13px; color: var(--sub); padding: 5px 0;
-    border-bottom: 1px solid var(--border); line-height: 1.5;
-  }
-  .uplata-red:last-child { border-bottom: none; }
-  .muted { color: var(--muted); }
-  .nova-uplata {
-    margin-top: 12px; padding: 12px 14px;
-    background: rgba(62,207,142,0.08); border: 1px solid rgba(62,207,142,0.25);
-    border-radius: 10px; font-size: 13px; color: var(--green);
-    line-height: 1.5;
-  }
-  .nova-uplata strong { font-size: 15px; }
-  .nova-znak { font-size: 16px; margin-right: 4px; }
-
-  /* ── Footer ───────────────────────────────────── */
-  .footer {
-    text-align: center; padding: 24px 0 0;
-    border-top: 1px solid var(--border);
-  }
-  .footer .hvala {
-    font-family: 'Syne', sans-serif;
-    font-size: 18px; font-weight: 800; color: var(--text);
-    margin-bottom: 10px;
-  }
-  .footer .meta {
-    font-size: 12px; color: var(--muted); line-height: 1.8;
-  }
-  .footer .stampano {
-    margin-top: 10px; font-size: 11px; color: var(--border);
-    font-family: monospace;
-  }
-
-  /* ── Print bar ────────────────────────────────── */
+  /* ── Print bar (screen only) ─────────── */
   .print-bar {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--surface); border-top: 1px solid var(--border);
-    padding: 14px 24px; display: flex; gap: 12px;
-    justify-content: center; z-index: 100;
+    position:fixed; bottom:0; left:0; right:0;
+    background:#111; padding:12px;
+    display:flex; gap:10px; justify-content:center;
   }
-  .btn-print {
-    font-family: 'Syne', sans-serif;
-    background: var(--accent); color: #000;
-    border: none; font-weight: 800; font-size: 14px;
-    padding: 12px 32px; border-radius: 10px;
-    cursor: pointer; transition: background 0.15s;
-    letter-spacing: 0.3px;
+  .btn-p {
+    font-size:14px; font-weight:700; padding:10px 28px;
+    border:none; border-radius:8px; cursor:pointer;
+    font-family:Arial,sans-serif;
   }
-  .btn-print:hover { background: #fbb740; }
-  .btn-close {
-    font-family: 'Syne', sans-serif;
-    background: var(--card); color: var(--muted);
-    border: 1px solid var(--border); font-weight: 700; font-size: 13px;
-    padding: 12px 24px; border-radius: 10px;
-    cursor: pointer; transition: all 0.15s;
-  }
-  .btn-close:hover { border-color: var(--red); color: var(--red); }
+  .btn-p.print { background:#f5a623; color:#000; }
+  .btn-p.close { background:#333; color:#fff; }
 
-  /* ── Print CSS ────────────────────────────────── */
+  /* ── Print media ───────────────────── */
   @media print {
-    .print-bar { display: none !important; }
-    body { background: #fff !important; color: #000 !important; padding-bottom: 0; }
-    .wrap { padding: 10px 16px; }
-    .gost-card, .stavke-card, .totals-card, .uplate-card {
-      background: #fff !important; border: 1px solid #ccc !important;
-      border-radius: 8px !important;
+    body { background:none; padding:0; display:block; }
+    .print-bar { display:none !important; }
+    .racun {
+      box-shadow:none; border-radius:0;
+      width:100%; padding:4mm 5mm;
     }
-    .gost-card::before { display: none; }
-    .header::after { background: #000; }
-    .gost-name, .header h1, .section-title { color: #000 !important; }
-    .td-naziv, .td-iznos, .total-row .lbl, .total-row .val { color: #000 !important; }
-    .td-center, .td-right, .uplata-red, .info-item .val { color: #333 !important; }
-    .info-item .lbl, .muted, .footer .meta, .section-title { color: #666 !important; }
-    .total-row.big { background: #f5f5f5 !important; }
-    .total-row.big .val { color: #c47d00 !important; }
-    .total-row.placeno .val, .total-row.ostatak-0 .val { color: #166534 !important; }
-    .total-row.ostatak .val { color: #b91c1c !important; }
-    .status-badge { background: #f5f5f5 !important; color: #333 !important; border-color: #ccc !important; }
-    thead tr { background: #f5f5f5 !important; }
-    .row-odd { background: #fafafa !important; }
-    .nova-uplata { background: #f0fdf4 !important; border-color: #86efac !important; color: #166534 !important; }
-    @page { margin: 10mm; size: A4; }
+    @page { size:A6; margin:4mm; }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <!-- Header -->
-  <div class="header">
-    <span class="logo-icon">🏕️</span>
-    <h1>KAMPING</h1>
-    <div class="subtitle">Potvrda o boravku / Receipt</div>
-    <div class="racun-id-badge">Račun: <strong>${id}</strong> &nbsp;·&nbsp; ${datum}</div>
+<div class="racun">
+
+  <!-- Logo -->
+  <div class="logo">
+    <h1>🏕️ Camping Neretva</h1>
+    <p>Potvrda o boravku / Receipt</p>
   </div>
+
+  <hr class="thick"/>
 
   <!-- Gost -->
-  <div class="section-title">Podaci gosta</div>
-  <div class="gost-card">
-    <div class="gost-name">${ime}</div>
-    <div class="info-grid">
-      <div class="info-item"><span class="lbl">Država</span><span class="val">${drzava}</span></div>
-      <div class="info-item"><span class="lbl">Tablice</span><span class="val">${tablice && tablice !== '—' ? tablice : '—'}</span></div>
-      <div class="info-item"><span class="lbl">Vozilo</span><span class="val">${vozilo}</span></div>
-      <div class="info-item"><span class="lbl">Broj dana</span><span class="val">${dani} dan(a)</span></div>
-      <div class="info-item"><span class="lbl">Datum dolaska</span><span class="val">${datum}</span></div>
-      <div class="info-item"><span class="lbl">Putnici</span><span class="val">${osobe} odrasli${djeca > 0 ? `, ${djeca} djece` : ''}${pas>0?` + ${pas}🐕`:''}${sator>0?` + ${sator}⛺`:''}</span></div>
-    </div>
-    ${komentar && komentar !== '—' ? `<div class="komentar-box">📝 ${komentar}</div>` : ''}
-  </div>
+  <div class="row"><span class="l">Gost</span><span class="r">${ime}</span></div>
+  <div class="row"><span class="l">Država / Tablice</span><span class="r">${drzava}${tablice && tablice !== '—' ? ' · ' + tablice : ''}</span></div>
+  <div class="row"><span class="l">Vozilo</span><span class="r">${vozilo}</span></div>
+  <div class="row"><span class="l">Dolazak / Dana</span><span class="r">${datumPrikaz} · ${dani} dan(a)</span></div>
+  ${(parseInt(osobe)||0) > 0 || (parseInt(djeca)||0) > 0 || pas > 0 || sator > 0 ? `
+  <div class="row"><span class="l">Putnici</span><span class="r">${osobe > 0 ? osobe+' odrasli' : ''}${djeca > 0 ? ' + '+djeca+' djece' : ''}${pas > 0 ? ' · '+pas+'🐕' : ''}${sator > 0 ? ' · '+sator+'⛺' : ''}</span></div>` : ''}
+
+  <hr/>
 
   <!-- Stavke -->
-  <div class="section-title">Specifikacija</div>
-  <div class="stavke-card">
-    <table>
-      <thead>
-        <tr>
-          <th>Stavka</th>
-          <th style="text-align:center">Kol.</th>
-          <th style="text-align:right">Cijena/dan</th>
-          <th style="text-align:right">Iznos</th>
-        </tr>
-      </thead>
-      <tbody>${stavkeHTML}</tbody>
-    </table>
-  </div>
+  <table>
+    <thead><tr><th>Stavka</th><th class="r">Dana</th><th class="r">€</th></tr></thead>
+    <tbody>${stavkeHTML}</tbody>
+  </table>
 
-  <!-- Totals -->
-  <div class="section-title">Obračun</div>
-  <div class="totals-card">
-    <div class="total-row big">
-      <span class="lbl">UKUPNO</span>
-      <span class="val">${eur.toFixed(2)} €</span>
+  <hr class="thick"/>
+
+  <!-- Ukupno -->
+  <div class="ukupno">
+    <div class="row">
+      <span class="l big">UKUPNO</span>
+      <span class="r big">${eur.toFixed(2)} €</span>
     </div>
-    <div class="total-row bam">
-      <span class="lbl" style="color:var(--muted)">Iznos u KM</span>
-      <span class="val">${bamTotal.toFixed(2)} KM</span>
+    <div class="row">
+      <span class="l bam"></span>
+      <span class="r bam">${bamTotal.toFixed(2)} KM</span>
     </div>
-    <div class="total-row placeno">
-      <span class="lbl">Plaćeno</span>
-      <span class="val">+ ${placenoEUR.toFixed(2)} € &nbsp;<span style="font-size:12px;font-weight:400">(${placenoBAM.toFixed(2)} KM)</span></span>
+    <hr class="dashed"/>
+    <div class="row">
+      <span class="l">Plaćeno</span>
+      <span class="r" style="color:#16a34a;font-weight:700">${placenoEUR.toFixed(2)} € &nbsp;(${placenoBAM.toFixed(2)} KM)</span>
     </div>
-    <div class="total-row ${ostatakEUR < 0.01 ? 'ostatak-0' : 'ostatak'}">
-      <span class="lbl">Ostatak</span>
-      <span class="val">${ostatakEUR < 0.01 ? '0.00 € ✅' : ostatakEUR.toFixed(2) + ' € <span style="font-size:12px;font-weight:400">(' + ostatakBAM.toFixed(2) + ' KM)</span>'}</span>
+    <div class="row">
+      <span class="l">Ostatak</span>
+      <span class="r" style="color:${ostatakEUR < 0.01 ? '#16a34a' : '#dc2626'};font-weight:700">${ostatakEUR < 0.01 ? '0.00 € ✅' : ostatakEUR.toFixed(2) + ' € (' + ostatakBAM.toFixed(2) + ' KM)'}</span>
     </div>
   </div>
 
-  <div class="status-wrap">
-    <span class="status-badge">${status}</span>
-  </div>
+  <div class="status">${status}</div>
 
-  <!-- Uplate -->
-  <div class="section-title">Historija plaćanja</div>
-  <div class="uplate-card">
-    ${uplateHTML}
-    ${novaUplataHTML}
-  </div>
+  <!-- Uplata historija -->
+  ${uplateHTML || novaUplataHTML ? `<hr class="dashed"/>${uplateHTML}${novaUplataHTML}` : ''}
+
+  ${komentar && komentar !== '—' ? `<hr class="dashed"/><div style="font-size:8pt;color:#555;font-style:italic">📝 ${komentar}</div>` : ''}
+
+  <hr/>
 
   <!-- Footer -->
   <div class="footer">
     <div class="hvala">Hvala na posjeti! 🙏</div>
-    <div class="meta">
-      Kurs: 1 € = ${EUR_BAM} KM (fiksni kurs)<br/>
-      Broj računa: ${id}
-    </div>
-    <div class="stampano">Štampano: ${sada}</div>
+    <small>Račun: ${id} &nbsp;·&nbsp; ${sada}</small>
+    <small>1 € = ${EUR_BAM} KM (fiksni kurs)</small>
   </div>
 
 </div>
 
 <!-- Print bar -->
-<div class="print-bar no-print">
-  <button class="btn-print" onclick="window.print()">🖨️ Štampaj / Print</button>
-  <button class="btn-close" onclick="window.close()">✕ Zatvori</button>
+<div class="print-bar">
+  <button class="btn-p print" onclick="window.print()">🖨️ Štampaj (A6)</button>
+  <button class="btn-p close" onclick="window.close()">✕ Zatvori</button>
 </div>
+
 </body>
 </html>`;
 }
