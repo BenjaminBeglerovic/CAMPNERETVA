@@ -6,7 +6,7 @@ const fs      = require('fs');
 const os      = require('os');
 
 const app  = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('frontend'));
@@ -82,7 +82,7 @@ function generirajRacun(podaci) {
   const datumPrikaz = `${gd}.${gm}.${gy}`;
   const statusBoja = status?.includes('U') ? '#15803d' : status?.includes('jelim') ? '#b45309' : '#dc2626';
 
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=http://${SERVER_IP}:${PORT}/racun/${id}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https://campneretva.onrender.com/racun/${id}`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -518,8 +518,7 @@ function generirajRacunGrupe({ grupaId, naziv, drzava, tip, dani, pas, sator, ko
 }
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n Kalkulator aktivan!`);
-  console.log(` Lokalno:  http://localhost:${PORT}`);
-  console.log(` Mreza:    http://${SERVER_IP}:${PORT}  <-- QR kodovi koriste ovu adresu`);
-  console.log(` Excel:    data/kalkulator.xlsx\n`);
+  console.log(`\n Kalkulator aktivan na portu ${PORT}`);
+  console.log(` Sajt: https://campneretva.onrender.com`);
+  console.log(` Excel: data/kalkulator.xlsx\n`);
 });
