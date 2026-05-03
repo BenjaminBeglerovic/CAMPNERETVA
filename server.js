@@ -9,8 +9,10 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
-// Servira statičke fajlove (index.html mora biti u istom folderu kao server.js)
-app.use(express.static(path.join(__dirname)));
+// Servira index.html na root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 const DATA_DIR  = path.join(__dirname, 'data');
 const EXCEL_PUT = path.join(DATA_DIR, 'kalkulator.xlsx');
