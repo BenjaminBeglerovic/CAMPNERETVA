@@ -779,6 +779,15 @@
   <span>Statistika</span>
 </button>
 
+<button class="lb-trigger" id="iv-trigger" onclick="otvoriIzvjestaje()" title="Izvještaji" style="right:auto;left:312px;">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14,2 14,8 20,8"/>
+    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
+  </svg>
+  <span>Izvještaji</span>
+</button>
+
 <!-- ── Leaderboard overlay ────────────────────────────────── -->
 <div class="lb-overlay" id="lb-overlay" onclick="zatvoriLeaderboard()"></div>
 
@@ -1414,8 +1423,300 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     IZVJEŠTAJI — overlay + full panel
+═══════════════════════════════════════════════════════ -->
+<div class="lb-overlay" id="iv-overlay" onclick="zatvoriIzvjestaje()"></div>
+<div class="lb-panel" id="iv-panel" style="width:min(100vw,820px);display:flex;flex-direction:column;">
+
+  <div class="lb-header">
+    <div>
+      <div class="lb-title">📄 Izvještaji</div>
+      <div class="lb-subtitle" id="iv-subtitle">Odaberite tip izvještaja</div>
+    </div>
+    <button class="lb-close" onclick="zatvoriIzvjestaje()">✕</button>
+  </div>
+
+  <!-- Tip tabs -->
+  <div style="display:flex;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;">
+    <button class="iv-tab active" id="ivt-dnevni"     onclick="setIvTip('dnevni')">📅 Dnevni</button>
+    <button class="iv-tab"        id="ivt-sedmicni"   onclick="setIvTip('sedmicni')">📆 Sedmični</button>
+    <button class="iv-tab"        id="ivt-mjesecni"   onclick="setIvTip('mjesecni')">🗓️ Mjesečni</button>
+    <button class="iv-tab"        id="ivt-godisnji"   onclick="setIvTip('godisnji')">📊 Godišnji</button>
+    <button class="iv-tab"        id="ivt-privremeni" onclick="setIvTip('privremeni')">🔎 Privremeni</button>
+    <button class="lb-refresh" style="margin-left:auto" onclick="ucitajIzvjestaj()">🔄 Osvježi</button>
+    <button class="lb-refresh" style="background:rgba(91,156,246,0.1);border-color:rgba(91,156,246,0.3);color:var(--blue);" onclick="stampajIzvjestaj()">🖨️ Štampaj</button>
+  </div>
+
+  <!-- Privremeni date range (samo za taj tip) -->
+  <div id="iv-privremeni-range" style="display:none;padding:10px 20px;border-bottom:1px solid var(--border);gap:12px;align-items:center;flex-wrap:wrap;flex-shrink:0;background:rgba(245,166,35,0.04);">
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);">
+      <span>Od:</span>
+      <input type="date" id="iv-od" class="modal-input" style="padding:6px 10px;font-size:12px;width:150px;"/>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);">
+      <span>Do:</span>
+      <input type="date" id="iv-do" class="modal-input" style="padding:6px 10px;font-size:12px;width:150px;"/>
+    </div>
+    <button class="lb-nav-today" onclick="ucitajIzvjestaj()">Primijeni</button>
+  </div>
+
+  <!-- Sadržaj izvještaja -->
+  <div style="flex:1;overflow-y:auto;" id="iv-content">
+    <div style="text-align:center;padding:60px;color:var(--muted);">Odaberite tip izvještaja</div>
+  </div>
+</div>
+
+<style>
+  /* ── Izvještaji tab dugmad ─────────────────────────── */
+  .iv-tab {
+    font-family:'Syne',sans-serif; font-size:12px; font-weight:700;
+    padding:8px 16px; border-radius:10px; border:1.5px solid var(--border);
+    background:transparent; color:var(--muted); cursor:pointer;
+    transition:all 0.15s; letter-spacing:0.3px; white-space:nowrap;
+  }
+  .iv-tab:hover { border-color:rgba(245,166,35,0.4); color:var(--text); }
+  .iv-tab.active { border-color:var(--accent); background:rgba(245,166,35,0.1); color:var(--accent); }
+
+  /* ── Izvještaj sadržaj ─────────────────────────────── */
+  .iv-section { padding:20px 24px; }
+  .iv-kpi { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  @media(max-width:600px) { .iv-kpi { grid-template-columns:1fr 1fr; } }
+
+  .iv-kpi-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:14px; padding:16px 18px; position:relative; overflow:hidden;
+  }
+  .iv-kpi-card::before {
+    content:''; position:absolute; top:0;left:0;right:0; height:2px;
+    background:linear-gradient(90deg,var(--accent),transparent);
+  }
+  .iv-kpi-card.green::before { background:linear-gradient(90deg,var(--success),transparent); }
+  .iv-kpi-card.blue::before  { background:linear-gradient(90deg,var(--blue),transparent); }
+  .iv-kpi-card.red::before   { background:linear-gradient(90deg,var(--accent2),transparent); }
+  .iv-kpi-lbl { font-size:10px; font-family:'Syne',sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+  .iv-kpi-val { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; color:var(--text); }
+  .iv-kpi-sub { font-size:11px; color:var(--muted); margin-top:3px; }
+
+  .iv-h { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin:20px 0 10px; display:flex; align-items:center; gap:10px; }
+  .iv-h::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .iv-table { width:100%; border-collapse:collapse; margin-bottom:16px; font-size:13px; }
+  .iv-table th { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); padding:8px 12px; border-bottom:1px solid var(--border); text-align:left; }
+  .iv-table td { padding:10px 12px; border-bottom:1px solid rgba(37,40,48,0.4); vertical-align:top; }
+  .iv-table tr:last-child td { border-bottom:none; }
+  .iv-table tr:hover td { background:rgba(255,255,255,0.02); }
+  .iv-table tfoot td { background:var(--surface); font-family:'Syne',sans-serif; font-weight:700; font-size:13px; border-top:2px solid var(--border); }
+
+  .iv-status-pl { color:var(--success); font-weight:600; font-size:12px; }
+  .iv-status-dj { color:var(--accent);  font-weight:600; font-size:12px; }
+  .iv-status-ne { color:var(--accent2); font-weight:600; font-size:12px; }
+
+  /* Štampanje */
+  @media print {
+    body > *:not(#iv-panel) { display:none !important; }
+    #iv-panel { position:static !important; width:100% !important; box-shadow:none !important; }
+    #iv-overlay, .lb-close, .lb-header .lb-refresh, #iv-privremeni-range { display:none !important; }
+    .iv-tab, .lb-refresh { display:none !important; }
+    .iv-table td, .iv-table th { color:#000 !important; border-color:#ccc !important; }
+    .iv-kpi-card { background:#fff !important; border:1px solid #ccc !important; }
+    .iv-kpi-val, .iv-kpi-lbl { color:#000 !important; }
+    @page { margin:12mm; size:A4; }
+  }
+</style>
+
 <script>
-  // ─── Konstante (učitavaju se sa servera) ───────────────
+  // ══ IZVJEŠTAJI ════════════════════════════════════════════
+  let ivTip = 'dnevni';
+
+  function otvoriIzvjestaje() {
+    document.getElementById('iv-overlay').classList.add('open');
+    document.getElementById('iv-panel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    ucitajIzvjestaj();
+  }
+  function zatvoriIzvjestaje() {
+    document.getElementById('iv-overlay').classList.remove('open');
+    document.getElementById('iv-panel').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function setIvTip(tip) {
+    ivTip = tip;
+    document.querySelectorAll('.iv-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('ivt-' + tip).classList.add('active');
+    const rangeEl = document.getElementById('iv-privremeni-range');
+    rangeEl.style.display = tip === 'privremeni' ? 'flex' : 'none';
+    ucitajIzvjestaj();
+  }
+  function stampajIzvjestaj() { window.print(); }
+
+  async function ucitajIzvjestaj() {
+    const el = document.getElementById('iv-content');
+    el.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);">Učitavanje...</div>';
+
+    const params = new URLSearchParams({ tip: ivTip });
+    if (ivTip === 'privremeni') {
+      const od  = document.getElementById('iv-od').value;
+      const doo = document.getElementById('iv-do').value;
+      if (!od || !doo) {
+        el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">Unesite period (Od — Do) i kliknite Primijeni</div>';
+        return;
+      }
+      params.set('datumOd', od);
+      params.set('datumDo', doo);
+    }
+
+    try {
+      const res  = await fetch(`/api/izvjestaj?${params}`);
+      const data = await res.json();
+
+      document.getElementById('iv-subtitle').textContent = data.periodNaziv || '—';
+
+      if (!data.rows || data.rows.length === 0) {
+        el.innerHTML = `
+          <div style="text-align:center;padding:60px;color:var(--muted);">
+            <div style="font-size:40px;margin-bottom:12px">📄</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--text)">${data.periodNaziv}</div>
+            <div style="margin-top:8px;font-size:13px">Nema podataka za ovaj period</div>
+          </div>`;
+        return;
+      }
+
+      const EUR_BAM_LOCAL = 1.95583;
+
+      // KPI kartice
+      const kpiHTML = `
+        <div class="iv-kpi">
+          <div class="iv-kpi-card">
+            <div class="iv-kpi-lbl">Turista</div>
+            <div class="iv-kpi-val">${data.brojTurista}</div>
+            <div class="iv-kpi-sub">✅ ${data.placanje.placeno} · ◑ ${data.placanje.djelimicno} · ✕ ${data.placanje.neplaceno}</div>
+          </div>
+          <div class="iv-kpi-card green">
+            <div class="iv-kpi-lbl">Ukupno</div>
+            <div class="iv-kpi-val">${data.ukupnoEUR.toFixed(2)} €</div>
+            <div class="iv-kpi-sub">${data.ukupnoBAM.toFixed(2)} KM</div>
+          </div>
+          <div class="iv-kpi-card blue">
+            <div class="iv-kpi-lbl">Naplaćeno</div>
+            <div class="iv-kpi-val">${data.placenoEUR.toFixed(2)} €</div>
+            <div class="iv-kpi-sub">${(data.placenoEUR*EUR_BAM_LOCAL).toFixed(2)} KM</div>
+          </div>
+          <div class="iv-kpi-card red">
+            <div class="iv-kpi-lbl">Ostatak</div>
+            <div class="iv-kpi-val">${data.ostatakEUR.toFixed(2)} €</div>
+            <div class="iv-kpi-sub">${(data.ostatakEUR*EUR_BAM_LOCAL).toFixed(2)} KM</div>
+          </div>
+        </div>`;
+
+      // Tabela turista
+      const turistaHTML = `
+        <div class="iv-h">👥 Lista turista (${data.rows.length})</div>
+        <table class="iv-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Ime</th>
+              <th>Država</th>
+              <th>Vozilo</th>
+              <th>Tablice</th>
+              <th style="text-align:center">Dana</th>
+              <th style="text-align:right">Ukupno</th>
+              <th style="text-align:right">Plaćeno</th>
+              <th style="text-align:right">Ostatak</th>
+              <th>Status</th>
+              <th>Datum</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.rows.map((r,i) => {
+              const stCls = r.status?.includes('✅') ? 'iv-status-pl' :
+                            r.status?.includes('Djelim') ? 'iv-status-dj' : 'iv-status-ne';
+              const [gy,gm,gd] = (r.datum||'').split('-');
+              return `<tr>
+                <td style="color:var(--muted);font-size:12px">${i+1}</td>
+                <td style="font-weight:600">${r.ime}</td>
+                <td style="color:var(--muted)">${r.drzava}</td>
+                <td>${r.vozilo}</td>
+                <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">${r.tablice||'—'}</td>
+                <td style="text-align:center">${r.dani}</td>
+                <td style="text-align:right;font-family:'Syne',sans-serif;font-weight:700;color:var(--accent)">${(r.eur||0).toFixed(2)} €</td>
+                <td style="text-align:right;color:var(--success);font-weight:600">${(r.placenoEUR||0).toFixed(2)} €</td>
+                <td style="text-align:right;color:var(--accent2);font-weight:600">${(r.ostatakEUR||0).toFixed(2)} €</td>
+                <td><span class="${stCls}">${r.status}</span></td>
+                <td style="color:var(--muted);font-size:12px;white-space:nowrap">${gd||''}${gm?'.'+gm:''}${gy?'.'+gy:''}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" style="color:var(--accent)">UKUPNO (${data.rows.length} turista)</td>
+              <td style="text-align:right;color:var(--accent)">${data.ukupnoEUR.toFixed(2)} €</td>
+              <td style="text-align:right;color:var(--success)">${data.placenoEUR.toFixed(2)} €</td>
+              <td style="text-align:right;color:var(--accent2)">${data.ostatakEUR.toFixed(2)} €</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>`;
+
+      // Raspored po državama
+      const drzaveHTML = data.poDrzavi.length > 0 ? `
+        <div class="iv-h">🌍 Po državama</div>
+        <table class="iv-table">
+          <thead><tr><th>Država</th><th>Turista</th><th style="text-align:right">Udio</th></tr></thead>
+          <tbody>${data.poDrzavi.map(d => `
+            <tr>
+              <td style="font-weight:500">${d.drzava}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:80px;background:var(--surface);border-radius:3px;height:6px;overflow:hidden">
+                    <div style="height:100%;background:var(--accent);width:${Math.round(d.broj/data.rows.length*100)}%;border-radius:3px"></div>
+                  </div>
+                  <span style="font-family:'Syne',sans-serif;font-weight:700">${d.broj}</span>
+                </div>
+              </td>
+              <td style="text-align:right;color:var(--muted)">${Math.round(d.broj/data.rows.length*100)}%</td>
+            </tr>`).join('')}</tbody>
+        </table>` : '';
+
+      // Raspored po vozilima
+      const vozilaHTML = data.poVozilu.length > 0 ? `
+        <div class="iv-h">🚗 Po vozilima</div>
+        <table class="iv-table">
+          <thead><tr><th>Vozilo</th><th>Broj</th><th style="text-align:right">Udio</th></tr></thead>
+          <tbody>${data.poVozilu.map(v => `
+            <tr>
+              <td style="font-weight:500">${v.vozilo}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:80px;background:var(--surface);border-radius:3px;height:6px;overflow:hidden">
+                    <div style="height:100%;background:var(--blue);width:${Math.round(v.broj/data.rows.length*100)}%;border-radius:3px"></div>
+                  </div>
+                  <span style="font-family:'Syne',sans-serif;font-weight:700">${v.broj}</span>
+                </div>
+              </td>
+              <td style="text-align:right;color:var(--muted)">${Math.round(v.broj/data.rows.length*100)}%</td>
+            </tr>`).join('')}</tbody>
+        </table>` : '';
+
+      // Footer sa datumom generisanja
+      const sada = new Date().toLocaleString('bs-BA', {
+        day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
+      });
+      const footerHTML = `
+        <div style="margin-top:16px;padding:14px 0;border-top:1px dashed var(--border);text-align:center;font-size:11px;color:var(--muted);">
+          Generisano: ${sada} · Kurs: 1 € = 1.95583 KM
+        </div>`;
+
+      el.innerHTML = `<div class="iv-section">${kpiHTML}${turistaHTML}${drzaveHTML}${vozilaHTML}${footerHTML}</div>`;
+
+    } catch(e) {
+      el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--accent2)">❌ Server nije dostupan.</div>`;
+    }
+  }
+</script>
+
+<script>
   const EUR_BAM = 1.95583;
 
   let VOZILO_CIJENA = {
@@ -2516,6 +2817,7 @@
     if (e.key === 'Escape') {
       zatvoriLeaderboard();
       zatvoriStatistiku();
+      if (typeof zatvoriIzvjestaje === 'function') zatvoriIzvjestaje();
       ['uplata','produzenje','obrisi','ocisti','tablice'].forEach(t => zatvoriModal(t));
     }
     if (e.key === 'Enter') {
