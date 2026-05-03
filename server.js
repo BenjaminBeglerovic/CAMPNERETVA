@@ -39,14 +39,16 @@ function generirajRacun(podaci) {
   const statusBorder= status?.includes('✅') ? 'rgba(62,207,142,0.3)'
                     : status?.includes('Djelim') ? 'rgba(245,166,35,0.3)' : 'rgba(232,83,74,0.3)';
 
-  // Stavke
-  const cijenaVozilo  = podaci.cijenaOsoba  != null ? (eur/dani - osobe*(podaci.cijenaOsoba||5) - djeca*(podaci.cijaneDijete||2.5) - (pas==='Da'?(podaci.cijanePas||2):0) - (sator==='Da'?(podaci.cijaneSator||5):0)) : eur/dani;
+  const cijenaVozilo = podaci.cijenaOsoba != null
+    ? (eur/dani - osobe*(podaci.cijenaOsoba||5) - djeca*(podaci.cijaneDijete||2.5)
+       - pas*(podaci.cijanePas||2) - sator*(podaci.cijaneSator||5))
+    : eur/dani;
   const stavke = [];
   stavke.push({ naziv: `Vozilo — ${vozilo}`, kol: dani, jed: 'dan', cij: parseFloat(cijenaVozilo.toFixed(2)) });
   if (osobe > 0) stavke.push({ naziv: `Odrasli (${osobe} os.)`, kol: dani, jed: 'dan', cij: parseFloat(((podaci.cijenaOsoba||5)*osobe).toFixed(2)) });
-  if (djeca  > 0) stavke.push({ naziv: `Djeca (${djeca})`,      kol: dani, jed: 'dan', cij: parseFloat(((podaci.cijaneDijete||2.5)*djeca).toFixed(2)) });
-  if (pas   === 'Da') stavke.push({ naziv: 'Pas 🐕',   kol: dani, jed: 'dan', cij: podaci.cijanePas||2 });
-  if (sator === 'Da') stavke.push({ naziv: 'Šator ⛺', kol: dani, jed: 'dan', cij: podaci.cijaneSator||5 });
+  if (djeca  > 0) stavke.push({ naziv: `Djeca (${djeca})`, kol: dani, jed: 'dan', cij: parseFloat(((podaci.cijaneDijete||2.5)*djeca).toFixed(2)) });
+  if (pas   > 0) stavke.push({ naziv: `Psi 🐕 (${pas}×)`,   kol: dani, jed: 'dan', cij: (podaci.cijanePas||2)*pas });
+  if (sator > 0) stavke.push({ naziv: `Šatori ⛺ (${sator}×)`, kol: dani, jed: 'dan', cij: (podaci.cijaneSator||5)*sator });
 
   const stavkeHTML = stavke.map((s,i) => `
     <tr class="${i%2===0?'row-even':'row-odd'}">
@@ -361,7 +363,7 @@ function generirajRacun(podaci) {
       <div class="info-item"><span class="lbl">Vozilo</span><span class="val">${vozilo}</span></div>
       <div class="info-item"><span class="lbl">Broj dana</span><span class="val">${dani} dan(a)</span></div>
       <div class="info-item"><span class="lbl">Datum dolaska</span><span class="val">${datum}</span></div>
-      <div class="info-item"><span class="lbl">Putnici</span><span class="val">${osobe} odrasli${djeca > 0 ? `, ${djeca} djece` : ''}${pas==='Da'?' + 🐕':''}${sator==='Da'?' + ⛺':''}</span></div>
+      <div class="info-item"><span class="lbl">Putnici</span><span class="val">${osobe} odrasli${djeca > 0 ? `, ${djeca} djece` : ''}${pas>0?` + ${pas}🐕`:''}${sator>0?` + ${sator}⛺`:''}</span></div>
     </div>
     ${komentar && komentar !== '—' ? `<div class="komentar-box">📝 ${komentar}</div>` : ''}
   </div>
@@ -486,8 +488,10 @@ function genId() {
   return Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2,5).toUpperCase();
 }
 function izracunajCijenu(data) {
+  const pas   = parseInt(data.pas)   || 0;
+  const sator = parseInt(data.sator) || 0;
   const perDay = (VOZILO_CIJENA[data.vozilo]??0) + data.osobe*CIJENA.osoba + data.djeca*CIJENA.dijete
-               + (data.pas?CIJENA.pas:0) + (data.sator?CIJENA.sator:0) 
+               + pas*CIJENA.pas + sator*CIJENA.sator;
   return { eur: parseFloat((perDay*data.dani).toFixed(2)), bam: parseFloat((perDay*data.dani*EUR_BAM).toFixed(2)) };
 }
 function validiraj(data) {
@@ -694,10 +698,14 @@ app.post('/api/kalkulator', async (req,res) => {
     const {workbook,worksheet}=await ucitajWorkbook();
     const id=genId(); const datum=danasniDatum();
     const tablice=(data.tablice||'').trim().toUpperCase()||'—';
+    const brPasa   = parseInt(data.pas)   || 0;
+    const brSatora = parseInt(data.sator) || 0;
     const noviRed=worksheet.addRow({
       id, datum, ime:data.ime, drzava:data.drzava, tablice,
       vozilo:VOZILO_NAZIV[data.vozilo]||data.vozilo,
-      osobe:data.osobe, djeca:data.djeca, pas:data.pas?'Da':'Ne', sator:data.sator?'Da':'Ne',
+      osobe:data.osobe, djeca:data.djeca,
+      pas:   brPasa   > 0 ? `${brPasa} 🐕`   : 'Ne',
+      sator: brSatora > 0 ? `${brSatora} ⛺` : 'Ne',
       dani:data.dani, eur, bam, placenoEUR,
       placenoBAM:parseFloat((placenoEUR*EUR_BAM).toFixed(2)),
       ostatakEUR, ostatakBAM:parseFloat((ostatakEUR*EUR_BAM).toFixed(2)),
@@ -711,7 +719,8 @@ app.post('/api/kalkulator', async (req,res) => {
       id, ime: data.ime, drzava: data.drzava, tablice,
       vozilo: VOZILO_NAZIV[data.vozilo] || data.vozilo,
       osobe: data.osobe, djeca: data.djeca,
-      pas: data.pas ? 'Da' : 'Ne', sator: data.sator ? 'Da' : 'Ne',
+      pas:   brPasa,
+      sator: brSatora,
       dani: data.dani, eur, bam, placenoEUR, ostatakEUR, status,
       uplate: uplateStr, komentar: (data.komentar || '').trim() || '—',
       datum, timestamp: timestamp(),
@@ -765,9 +774,10 @@ app.put('/api/update', async (req,res) => {
       const vNaz=String(get('Vrsta Vozila'));
       const vKey=Object.keys(VOZILO_NAZIV).find(k=>VOZILO_NAZIV[k]===vNaz)||'auto';
       const osobe=parseFloat(get('Osobe'))||0; const djeca=parseFloat(get('Djeca'))||0;
-      const pas=get('Pas')==='Da'; const sator=get('Šator')==='Da';
-      const oStr=String(get('Oprema')||''); const oCnt=oStr==='—'?0:oStr.split(',').filter(Boolean).length;
-      const perDay=(VOZILO_CIJENA[vKey]??0)+osobe*CIJENA.osoba+djeca*CIJENA.dijete+(pas?CIJENA.pas:0)+(sator?CIJENA.sator:0);
+      // pas i sator se čitaju u perDay izračunu iznad
+      const oStr=String(get('Pas')||''); const pasBr=parseInt(oStr)||0;
+      const sStr=String(get('Šator')||''); const satorBr=parseInt(sStr)||0;
+      const perDay=(VOZILO_CIJENA[vKey]??0)+osobe*CIJENA.osoba+djeca*CIJENA.dijete+pasBr*CIJENA.pas+satorBr*CIJENA.sator;
       const novaUk=parseFloat((perDay*noviDani).toFixed(2));
       const stariPl=parseFloat(get('Plaćeno (€)'))||0;
       const noviOst=parseFloat(Math.max(0,novaUk-stariPl).toFixed(2));
@@ -959,8 +969,10 @@ app.post('/api/grupa', async (req, res) => {
 
     const brojOsoba  = parseInt(osobe)  || 0;
     const brojDjeca  = parseInt(djeca)  || 0;
-    const pasEUR     = pas   ? CIJENA.pas   * dani : 0;
-    const satorEUR   = sator ? CIJENA.sator * dani : 0;
+    const brojPasa   = parseInt(pas)    || 0;
+    const brojSatora = parseInt(sator)  || 0;
+    const pasEUR     = brojPasa   * CIJENA.pas   * dani;
+    const satorEUR   = brojSatora * CIJENA.sator * dani;
     const osobeEUR   = brojOsoba * CIJENA.osoba * dani;
     const djecaEUR   = brojDjeca * CIJENA.dijete * dani;
 
@@ -980,7 +992,7 @@ app.post('/api/grupa', async (req, res) => {
       ? `1. ${placenoEUR.toFixed(2)}€${placenoNap ? ' — ' + placenoNap : ''} (${ts})`
       : '—';
 
-    const komentarFull = `GRUPA: ${naziv} (${tip || 'ostalo'}) | ID: ${grupaId}${osobe?` | ${osobe} odraslih`:''}${djeca?` | ${djeca} djece`:''}${komentar ? ' | ' + komentar : ''}`;
+    const komentarFull = `GRUPA: ${naziv} (${tip || 'ostalo'}) | ID: ${grupaId}${brojOsoba?` | ${brojOsoba} odraslih`:''}${brojDjeca?` | ${brojDjeca} djece`:''}${brojPasa?` | ${brojPasa}🐕`:''}${brojSatora?` | ${brojSatora}⛺`:''}${komentar ? ' | ' + komentar : ''}`;
 
     // Jedan red po VRSTI vozila
     for (const v of vozila) {
@@ -1002,8 +1014,8 @@ app.post('/api/grupa', async (req, res) => {
         tablice:    '—',
         vozilo:     VOZILO_NAZIV[v.tip] || v.tip,
         osobe:      brojOsoba, djeca: brojDjeca,
-        pas:        pas   ? 'Da' : 'Ne',
-        sator:      sator ? 'Da' : 'Ne',
+        pas:        brojPasa   > 0 ? `${brojPasa} 🐕`   : 'Ne',
+        sator:      brojSatora > 0 ? `${brojSatora} ⛺` : 'Ne',
         dani,
         eur:        redUkupno,
         bam:        parseFloat((redUkupno * EUR_BAM).toFixed(2)),
@@ -1022,7 +1034,8 @@ app.post('/api/grupa', async (req, res) => {
     await workbook.xlsx.writeFile(EXCEL_PUT);
 
     const racunHTML = generirajRacunGrupe({
-      grupaId, naziv, drzava, tip, dani, pas, sator, komentar,
+      grupaId, naziv, drzava, tip, dani,
+      pas: brojPasa, sator: brojSatora, komentar,
       vozila, osobe: brojOsoba, djeca: brojDjeca,
       ukupnoTotal, placenoEUR, ostatakEUR, status,
       uplateStr, datum, ts, ukupnoKom,
@@ -1071,8 +1084,8 @@ function generirajRacunGrupe({ grupaId, naziv, drzava, tip, dani, pas, sator, ko
   const opcijeHTML = [];
   if (osobe > 0) opcijeHTML.push(`<tr class="row-odd"><td class="td-naziv">Odrasli 👤 (${osobe} os.)</td><td class="td-center">${dani} dan</td><td class="td-center">${CIJENA.osoba.toFixed(2)} €/dan</td><td class="td-right td-iznos">${(CIJENA.osoba*osobe*dani).toFixed(2)} €</td></tr>`);
   if (djeca > 0) opcijeHTML.push(`<tr class="row-even"><td class="td-naziv">Djeca 👦 (${djeca})</td><td class="td-center">${dani} dan</td><td class="td-center">${CIJENA.dijete.toFixed(2)} €/dan</td><td class="td-right td-iznos">${(CIJENA.dijete*djeca*dani).toFixed(2)} €</td></tr>`);
-  if (pas)   opcijeHTML.push(`<tr class="row-odd"><td class="td-naziv">Pas 🐕</td><td class="td-center">${dani} dan</td><td class="td-center">${CIJENA.pas.toFixed(2)} €/dan</td><td class="td-right td-iznos">${(CIJENA.pas*dani).toFixed(2)} €</td></tr>`);
-  if (sator) opcijeHTML.push(`<tr class="row-even"><td class="td-naziv">Šator ⛺</td><td class="td-center">${dani} dan</td><td class="td-center">${CIJENA.sator.toFixed(2)} €/dan</td><td class="td-right td-iznos">${(CIJENA.sator*dani).toFixed(2)} €</td></tr>`);
+  if (pas > 0)   opcijeHTML.push(`<tr class="row-odd"><td class="td-naziv">Psi 🐕 (${pas}×)</td><td class="td-center">${dani} dan</td><td class="td-center">${CIJENA.pas.toFixed(2)} €/dan</td><td class="td-right td-iznos">${(CIJENA.pas*pas*dani).toFixed(2)} €</td></tr>`);
+  if (sator > 0) opcijeHTML.push(`<tr class="row-even"><td class="td-naziv">Šatori ⛺ (${sator}×)</td><td class="td-center">${dani} dan</td><td class="td-center">${CIJENA.sator.toFixed(2)} €/dan</td><td class="td-right td-iznos">${(CIJENA.sator*sator*dani).toFixed(2)} €</td></tr>`);
 
   const uplateHTML = (uplateStr && uplateStr !== '—')
     ? uplateStr.split('\n').map(u => `<div class="uplata-red">✓ ${u}</div>`).join('')
