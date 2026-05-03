@@ -1,8 +1,4 @@
 
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
-
-// ...
-const qrLink = `${BASE_URL}/racun/${id}`;
 
 
 const express = require('express');
@@ -12,7 +8,8 @@ const path    = require('path');
 const fs      = require('fs');
 
 const app  = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;   // ✅ koristi Render PORT
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('frontend'));
