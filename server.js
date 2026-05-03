@@ -389,11 +389,10 @@ function generirajRacun(podaci) {
   .timer.warn  { color:#b45309; }
   .timer.over  { color:#dc2626; }
   .extend-btn {
-    display:none; margin-top:2mm; font-size:7pt; font-weight:700;
+    display:block; margin-top:2mm; font-size:7pt; font-weight:700;
     background:#1a5c2a; color:#fff; border:none; border-radius:4px;
     padding:2mm 3mm; cursor:pointer; width:100%;
   }
-  .extend-btn.visible { display:block; }
   .extended-note { display:none; font-size:7pt; color:#15803d; font-weight:700; margin-top:1mm; text-align:center; }
   @media print { .checkout-box { background:#f0f7f0 !important; border-color:#1a5c2a !important; } .timer-wrap { display:none; } }
   .pbar { position:fixed; bottom:0; left:0; right:0; background:#111; padding:10px; display:flex; gap:10px; justify-content:center; z-index:999; }
@@ -468,24 +467,11 @@ function generirajRacun(podaci) {
   <div class="fin">
     <div class="frow big">
       <span class="lb">TOTAL</span>
-      <div style="text-align:right">
-        <span class="val">${eur.toFixed(2)} &euro;</span>
-        <div class="bam">${bamTotal.toFixed(2)} KM</div>
-      </div>
-    </div>
-    <div class="frow">
-      <span class="lb">Paid</span>
-      <div style="text-align:right">
-        <span class="val green">+ ${placenoEUR.toFixed(2)} &euro;</span>
-        <div class="bam">${placenoBAM.toFixed(2)} KM</div>
-      </div>
+      <span class="val">${eur.toFixed(2)} &euro;</span>
     </div>
     <div class="frow">
       <span class="lb">Balance due</span>
-      <div style="text-align:right">
-        <span class="val ${ostatakEUR < 0.01 ? 'green' : 'red'}">${ostatakEUR < 0.01 ? '0.00 EUR' : ostatakEUR.toFixed(2) + ' \u20AC'}</span>
-        ${ostatakEUR >= 0.01 ? `<div class="bam">${ostatakBAM.toFixed(2)} KM</div>` : ''}
-      </div>
+      <span class="val ${ostatakEUR < 0.01 ? 'green' : 'red'}">${ostatakEUR < 0.01 ? '0.00 &euro;' : ostatakEUR.toFixed(2) + ' &euro;'}</span>
     </div>
   </div>
 
@@ -522,8 +508,7 @@ function generirajRacun(podaci) {
     </div>
     <div class="fc" style="text-align:right">
       <strong>+387 61 808 564</strong><br/>
-      Owner: Adis Trebovic<br/>
-      1 EUR = ${EUR_BAM} KM (fixed)
+      Owner: Adis Trebovic
     </div>
   </div>
 
@@ -574,12 +559,17 @@ function generirajRacun(podaci) {
       return;
     }
     if (!extended) {
-      const h = diff / 3600000;
-      const m = (diff % 3600000) / 60000;
-      const s = (diff % 60000)   / 1000;
-      timerEl.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
-      timerEl.className   = diff < 7200000 ? 'timer warn' : 'timer';
-      if (diff < 7200000) btnEl.classList.add('visible');
+      const totalMin = diff / 60000;
+      const days  = Math.floor(totalMin / 1440);
+      const hours = Math.floor((totalMin % 1440) / 60);
+      const mins  = Math.floor(totalMin % 60);
+      if (days > 0) {
+        timerEl.textContent = days + 'd ' + pad(hours) + 'h ' + pad(mins) + 'm';
+      } else {
+        timerEl.textContent = pad(hours) + 'h ' + pad(mins) + 'm';
+      }
+      if (diff < 7200000) timerEl.className = 'timer warn';
+      else timerEl.className = 'timer';
     }
   }
 
