@@ -1,3 +1,10 @@
+
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+
+// ...
+const qrLink = `${BASE_URL}/racun/${id}`;
+
+
 const express = require('express');
 const cors    = require('cors');
 const ExcelJS = require('exceljs');
