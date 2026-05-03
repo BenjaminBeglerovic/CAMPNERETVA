@@ -964,20 +964,16 @@
 
     <div class="divider"></div>
 
-    <div class="toggle-row">
-      <div class="toggle-group">
-        <label class="toggle">
-          <input type="checkbox" id="pas"/>
-          <div class="toggle-track"></div><div class="toggle-thumb"></div>
-        </label>
-        <div><div class="toggle-label">🐕 Pas</div><div class="toggle-sub">+2 €/dan</div></div>
+    <div class="grid-2">
+      <div class="field">
+        <label class="field-label" for="pas">🐕 Psi <span style="color:var(--muted);font-weight:400;font-size:11px">(+{{pasCijena}} €/dan po psu)</span></label>
+        <input type="number" id="pas" placeholder="0" min="0" max="20" value="0"
+          oninput="if(izracunatoUspjesno)izracunaj()"/>
       </div>
-      <div class="toggle-group" style="margin-left:24px;">
-        <label class="toggle">
-          <input type="checkbox" id="sator"/>
-          <div class="toggle-track"></div><div class="toggle-thumb"></div>
-        </label>
-        <div><div class="toggle-label">⛺ Šator</div><div class="toggle-sub">+5 €/dan</div></div>
+      <div class="field">
+        <label class="field-label" for="sator">⛺ Šatori <span style="color:var(--muted);font-weight:400;font-size:11px">(+{{satorCijena}} €/dan po šatoru)</span></label>
+        <input type="number" id="sator" placeholder="0" min="0" max="20" value="0"
+          oninput="if(izracunatoUspjesno)izracunaj()"/>
       </div>
     </div>
   </div>
@@ -1156,14 +1152,14 @@
     <div class="divider"></div>
 
     <!-- Pas i Šator -->
-    <div class="toggle-row" style="margin-bottom:20px;">
-      <div class="toggle-group">
-        <label class="toggle"><input type="checkbox" id="g-pas"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        <div><div class="toggle-label">🐕 Pas</div><div class="toggle-sub" id="g-pas-sub">+2 €/dan</div></div>
+    <div class="grid-2" style="margin-top:4px;margin-bottom:20px;">
+      <div class="field">
+        <label class="field-label" for="g-pas">🐕 Broj pasa</label>
+        <input type="number" id="g-pas" placeholder="0" min="0" max="50" value="0" oninput="azurirajGrupaSummary()"/>
       </div>
-      <div class="toggle-group" style="margin-left:24px;">
-        <label class="toggle"><input type="checkbox" id="g-sator"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        <div><div class="toggle-label">⛺ Šator</div><div class="toggle-sub" id="g-sator-sub">+5 €/dan</div></div>
+      <div class="field">
+        <label class="field-label" for="g-sator">⛺ Broj šatora</label>
+        <input type="number" id="g-sator" placeholder="0" min="0" max="50" value="0" oninput="azurirajGrupaSummary()"/>
       </div>
     </div>
 
@@ -1465,13 +1461,13 @@
     const osobe     = parseFloat(document.getElementById('osobe').value) || 0;
     const djeca     = parseFloat(document.getElementById('djeca').value) || 0;
     const dani      = parseInt(document.getElementById('dani').value)    || 1;
-    const pas       = document.getElementById('pas').checked;
-    const sator     = document.getElementById('sator').checked;
+    const pas       = parseInt(document.getElementById('pas').value)   || 0;
+    const sator     = parseInt(document.getElementById('sator').value) || 0;
 
     const voziloEUR = VOZILO_CIJENA[voziloVal] ?? 0;
     const putnici   = osobe * CIJENA.osoba + djeca * CIJENA.dijete;
-    const pasEUR    = pas   ? CIJENA.pas   : 0;
-    const satorEUR  = sator ? CIJENA.sator : 0;
+    const pasEUR    = pas   * CIJENA.pas;
+    const satorEUR  = sator * CIJENA.sator;
 
     const perDay = voziloEUR + putnici + pasEUR + satorEUR;
     zadnjaCijenaEUR = parseFloat((perDay * dani).toFixed(2));
@@ -1486,8 +1482,8 @@
     document.getElementById('breakdown').style.display = 'block';
     document.getElementById('br-vozilo').textContent  = `${voziloEUR} €`;
     document.getElementById('br-putnici').textContent = `+${putnici.toFixed(2)} €`;
-    document.getElementById('br-pas').textContent     = pasEUR   ? `+${pasEUR} €`   : '—';
-    document.getElementById('br-sator').textContent   = satorEUR ? `+${satorEUR} €` : '—';
+    document.getElementById('br-pas').textContent     = pasEUR   ? `+${pasEUR.toFixed(2)} € (${pas}× 🐕)` : '—';
+    document.getElementById('br-sator').textContent   = satorEUR ? `+${satorEUR.toFixed(2)} € (${sator}× ⛺)` : '—';
 
     document.getElementById('bam-strip').classList.add('visible');
 
@@ -1603,8 +1599,8 @@
       vozilo:    document.querySelector('input[name="vozilo"]:checked')?.value || '',
       osobe:     parseFloat(document.getElementById('osobe').value) || 0,
       djeca:     parseFloat(document.getElementById('djeca').value) || 0,
-      pas:       document.getElementById('pas').checked,
-      sator:     document.getElementById('sator').checked,
+      pas:       parseInt(document.getElementById('pas').value)   || 0,
+      sator:     parseInt(document.getElementById('sator').value) || 0,
       dani:      parseInt(document.getElementById('dani').value) || 1,
       ukupnoEUR: zadnjaCijenaEUR,
       ukupnoBAM: parseFloat((zadnjaCijenaEUR * EUR_BAM).toFixed(2)),
@@ -1670,8 +1666,8 @@
     document.getElementById('dani').value    = '';
     document.getElementById('osobe').value   = '';
     document.getElementById('djeca').value   = '';
-    document.getElementById('pas').checked   = false;
-    document.getElementById('sator').checked = false;
+    document.getElementById('pas').value   = '0';
+    document.getElementById('sator').value = '0';
     document.getElementById('komentar').value = '';
     document.querySelectorAll('input[name="vozilo"]').forEach(r => r.checked = false);
     document.getElementById('btn-salji').disabled = true;
@@ -1771,8 +1767,8 @@
 
   function azurirajGrupaSummary() {
     const dani   = parseInt(document.getElementById('g-dani').value) || 1;
-    const pas    = document.getElementById('g-pas').checked;
-    const sator  = document.getElementById('g-sator').checked;
+    const pas    = parseInt(document.getElementById('g-pas').value)   || 0;
+    const sator  = parseInt(document.getElementById('g-sator').value) || 0;
     const osobe  = parseInt(document.getElementById('g-osobe')?.value) || 0;
     const djeca  = parseInt(document.getElementById('g-djeca')?.value) || 0;
     const vozila = citajVozilaGrupe();
@@ -1784,7 +1780,7 @@
     });
     const osobeEUR   = osobe * CIJENA.osoba  * dani;
     const djecaEUR   = djeca * CIJENA.dijete * dani;
-    const ukupnoOpcije = ((pas ? CIJENA.pas : 0) + (sator ? CIJENA.sator : 0)) * dani;
+    const ukupnoOpcije = (pas * CIJENA.pas + sator * CIJENA.sator) * dani;
     const ukupno = ukupnoVozila + osobeEUR + djecaEUR + ukupnoOpcije;
     const bam    = parseFloat((ukupno * EUR_BAM).toFixed(2));
 
@@ -1796,8 +1792,8 @@
     if (ukupnoKom > 0) dijelovi.push(`${ukupnoKom} vozil(a)`);
     if (osobe > 0)     dijelovi.push(`${osobe} odraslih`);
     if (djeca > 0)     dijelovi.push(`${djeca} djece`);
-    if (pas)           dijelovi.push('pas');
-    if (sator)         dijelovi.push('šator');
+    if (pas > 0)       dijelovi.push(`${pas} 🐕`);
+    if (sator > 0)     dijelovi.push(`${sator} ⛺`);
     dijelovi.push(`× ${dani} dana`);
 
     document.getElementById('grupa-summary').innerHTML = `
@@ -1810,8 +1806,8 @@
     const naziv      = document.getElementById('g-naziv').value.trim();
     const drzava     = document.getElementById('g-drzava').value.trim();
     const dani       = parseInt(document.getElementById('g-dani').value) || 0;
-    const pas        = document.getElementById('g-pas').checked;
-    const sator      = document.getElementById('g-sator').checked;
+    const pas        = parseInt(document.getElementById('g-pas').value)   || 0;
+    const sator      = parseInt(document.getElementById('g-sator').value) || 0;
     const osobe      = parseInt(document.getElementById('g-osobe')?.value) || 0;
     const djeca      = parseInt(document.getElementById('g-djeca')?.value) || 0;
     const komentar   = document.getElementById('g-komentar').value.trim();
@@ -1837,11 +1833,9 @@
       if (res.ok) {
         showNotif(`✅ Grupa "${naziv}" sačuvana!`);
         if (data.racunUrl) setTimeout(() => window.open(data.racunUrl, '_blank'), 400);
-        ['g-naziv','g-drzava','g-dani','g-placeno','g-placeno-nap','g-komentar','g-osobe','g-djeca'].forEach(id => {
-          const el = document.getElementById(id); if (el) el.value = '';
+        ['g-naziv','g-drzava','g-dani','g-placeno','g-placeno-nap','g-komentar','g-osobe','g-djeca','g-pas','g-sator'].forEach(id => {
+          const el = document.getElementById(id); if (el) el.value = (id==='g-pas'||id==='g-sator') ? '0' : '';
         });
-        document.getElementById('g-pas').checked   = false;
-        document.getElementById('g-sator').checked = false;
         document.getElementById('vozila-lista').innerHTML = '';
         voziloRedBr = 0;
         dodajVoziloRed('motor');
@@ -1856,8 +1850,8 @@
   }
 
   document.getElementById('g-dani').addEventListener('input', azurirajGrupaSummary);
-  document.getElementById('g-pas').addEventListener('change', azurirajGrupaSummary);
-  document.getElementById('g-sator').addEventListener('change', azurirajGrupaSummary);
+  document.getElementById('g-pas').addEventListener('input', azurirajGrupaSummary);
+  document.getElementById('g-sator').addEventListener('input', azurirajGrupaSummary);
 
   // ═══════════════════════════════════════════════════════
   // ── STATISTIKA ──────────────────────────────────────────
