@@ -1102,7 +1102,7 @@
       </div>
       <div class="field">
         <label class="field-label" for="g-dani">Broj Dana</label>
-        <input type="number" id="g-dani" placeholder="1" min="1" max="365"/>
+        <input type="number" id="g-dani" placeholder="1" min="1" max="365" oninput="azurirajGrupaSummary()"/>
       </div>
       <div class="field">
         <label class="field-label">Tip grupe</label>
@@ -1127,10 +1127,6 @@
     <div class="section-title">G02 — Vozila u Grupi</div>
     <div id="vozila-lista" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
     <button class="btn-dodaj-clana" onclick="dodajVoziloRed()">+ Dodaj vrstu vozila</button>
-    <div class="grupa-summary" id="grupa-summary">
-      <span>Unesite vozila i broj dana</span>
-      <strong>0.00 €</strong>
-    </div>
   </div>
 
   <!-- G03 ── Opcije i plaćanje ────────────────────────── -->
@@ -1172,6 +1168,35 @@
       <div class="field" style="flex:2">
         <label class="field-label" for="g-placeno-nap">Napomena uplate</label>
         <input type="text" id="g-placeno-nap" placeholder="npr. gotovina, prva rata..."/>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ── Kalkulacija grupe ─────────────────────────── -->
+    <div id="grupa-kalkulacija" style="
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+    ">
+      <div style="
+        background: rgba(245,166,35,0.06); border-bottom: 1px solid var(--border);
+        padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;
+      ">
+        <span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent)">📊 Kalkulacija grupe</span>
+        <span style="font-size:11px;color:var(--muted)" id="g-kalkulacija-dani">— dana</span>
+      </div>
+      <div id="g-stavke-lista" style="padding:4px 0;"></div>
+      <div style="border-top:1px solid var(--border);padding:14px 18px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+          <span style="font-size:13px;color:var(--muted)">Ukupno</span>
+          <div style="text-align:right">
+            <span id="g-ukupno-eur" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent)">0.00 €</span>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-size:11px;color:var(--muted)">Konverzija</span>
+          <span id="g-ukupno-bam" style="font-size:13px;font-weight:600;color:var(--blue)">0.00 KM</span>
+        </div>
       </div>
     </div>
   </div>
@@ -1406,6 +1431,10 @@
       const data = await res.json();
       if (data.vozilo)  VOZILO_CIJENA = data.vozilo;
       if (data.opcije)  CIJENA        = data.opcije;
+      // Osvježi kalkulaciju grupe ako je otvorena
+      if (document.getElementById('mode-grupa')?.style.display !== 'none') {
+        azurirajGrupaSummary();
+      }
     } catch { /* koristi defaults */ }
   }
   ucitajCijene();
@@ -1698,8 +1727,9 @@
     document.getElementById('tab-individualni').classList.toggle('active', mode === 'individualni');
     document.getElementById('tab-grupa').classList.toggle('active', mode === 'grupa');
     if (mode === 'grupa' && document.getElementById('vozila-lista').children.length === 0) {
-      dodajVoziloRed('motor'); // defaultni red — motor
+      dodajVoziloRed('motor');
     }
+    if (mode === 'grupa') setTimeout(azurirajGrupaSummary, 50);
   }
 
   // ═══════════════════════════════════════════════════════
@@ -1766,40 +1796,87 @@
   }
 
   function azurirajGrupaSummary() {
-    const dani   = parseInt(document.getElementById('g-dani').value) || 1;
-    const pas    = parseInt(document.getElementById('g-pas').value)   || 0;
-    const sator  = parseInt(document.getElementById('g-sator').value) || 0;
-    const osobe  = parseInt(document.getElementById('g-osobe')?.value) || 0;
-    const djeca  = parseInt(document.getElementById('g-djeca')?.value) || 0;
+    const dani  = parseInt(document.getElementById('g-dani').value)   || 0;
+    const osobe = parseInt(document.getElementById('g-osobe')?.value) || 0;
+    const djeca = parseInt(document.getElementById('g-djeca')?.value) || 0;
+    const pas   = parseInt(document.getElementById('g-pas').value)    || 0;
+    const sator = parseInt(document.getElementById('g-sator').value)  || 0;
     const vozila = citajVozilaGrupe();
 
-    let ukupnoVozila = 0, ukupnoKom = 0;
+    // Ažuriraj dana labelu
+    document.getElementById('g-kalkulacija-dani').textContent = dani > 0 ? `${dani} dan(a)` : '— dana';
+
+    // Izgradi stavke
+    const stavke = [];
+    let ukupno = 0;
+
     vozila.forEach(v => {
-      ukupnoVozila += (VOZILO_CIJENA[v.tip] ?? 0) * v.kol * dani;
-      ukupnoKom    += v.kol;
+      const cij  = VOZILO_CIJENA[v.tip] ?? 0;
+      const kol  = v.kol || 1;
+      const naziv = (v.tip === 'motor' ? '🏍️ Motor' :
+                     v.tip === 'auto' ? '🚗 Auto' :
+                     v.tip === 'auto_sator' ? '⛺ Auto+Šator' :
+                     v.tip === 'van' ? '🚐 Van' :
+                     v.tip === 'van_l' ? '🚌 Van L' :
+                     v.tip === 'auto_karavan' ? '🏕️ Auto+Karavan' :
+                     v.tip === 'motohome' ? '🏠 Motohome' : v.tip);
+      if (dani > 0) {
+        const iznos = cij * kol * dani;
+        ukupno += iznos;
+        stavke.push({ naziv: `${naziv} × ${kol}`, cij, kol, iznos });
+      } else {
+        stavke.push({ naziv: `${naziv} × ${kol}`, cij, kol, iznos: 0 });
+      }
     });
-    const osobeEUR   = osobe * CIJENA.osoba  * dani;
-    const djecaEUR   = djeca * CIJENA.dijete * dani;
-    const ukupnoOpcije = (pas * CIJENA.pas + sator * CIJENA.sator) * dani;
-    const ukupno = ukupnoVozila + osobeEUR + djecaEUR + ukupnoOpcije;
-    const bam    = parseFloat((ukupno * EUR_BAM).toFixed(2));
 
-    // Ažuriraj tooltip sub labele
-    if (document.getElementById('g-pas-sub'))   document.getElementById('g-pas-sub').textContent   = `+${CIJENA.pas} €/dan`;
-    if (document.getElementById('g-sator-sub')) document.getElementById('g-sator-sub').textContent = `+${CIJENA.sator} €/dan`;
+    if (osobe > 0 && dani > 0) {
+      const iznos = osobe * CIJENA.osoba * dani;
+      ukupno += iznos;
+      stavke.push({ naziv: `👤 Odrasli × ${osobe}`, cij: CIJENA.osoba, kol: osobe, iznos });
+    }
+    if (djeca > 0 && dani > 0) {
+      const iznos = djeca * CIJENA.dijete * dani;
+      ukupno += iznos;
+      stavke.push({ naziv: `👦 Djeca × ${djeca}`, cij: CIJENA.dijete, kol: djeca, iznos });
+    }
+    if (pas > 0 && dani > 0) {
+      const iznos = pas * CIJENA.pas * dani;
+      ukupno += iznos;
+      stavke.push({ naziv: `🐕 Psi × ${pas}`, cij: CIJENA.pas, kol: pas, iznos });
+    }
+    if (sator > 0 && dani > 0) {
+      const iznos = sator * CIJENA.sator * dani;
+      ukupno += iznos;
+      stavke.push({ naziv: `⛺ Šatori × ${sator}`, cij: CIJENA.sator, kol: sator, iznos });
+    }
 
-    const dijelovi = [];
-    if (ukupnoKom > 0) dijelovi.push(`${ukupnoKom} vozil(a)`);
-    if (osobe > 0)     dijelovi.push(`${osobe} odraslih`);
-    if (djeca > 0)     dijelovi.push(`${djeca} djece`);
-    if (pas > 0)       dijelovi.push(`${pas} 🐕`);
-    if (sator > 0)     dijelovi.push(`${sator} ⛺`);
-    dijelovi.push(`× ${dani} dana`);
+    // Render stavki
+    const lista = document.getElementById('g-stavke-lista');
+    if (stavke.length === 0) {
+      lista.innerHTML = `<div style="padding:14px 18px;font-size:13px;color:var(--muted)">Dodajte vozila i unesite broj dana</div>`;
+    } else {
+      lista.innerHTML = stavke.map(s => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:1px solid rgba(37,40,48,0.5);">
+          <div>
+            <span style="font-size:13px;font-weight:500;color:var(--text)">${s.naziv}</span>
+            <span style="font-size:11px;color:var(--muted);margin-left:8px;">${s.cij.toFixed(2)} €/dan</span>
+          </div>
+          <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:${s.iznos>0?'var(--text)':'var(--muted)'}">
+            ${dani > 0 ? s.iznos.toFixed(2) + ' €' : '—'}
+          </span>
+        </div>`).join('');
+    }
 
-    document.getElementById('grupa-summary').innerHTML = `
-      <span>${dijelovi.join(' · ')}</span>
-      <strong>${ukupno.toFixed(2)} € <span style="font-size:13px;color:var(--bam)">(${bam.toFixed(2)} KM)</span></strong>
-    `;
+    // Ukupno
+    const bam = parseFloat((ukupno * EUR_BAM).toFixed(2));
+    document.getElementById('g-ukupno-eur').textContent = ukupno.toFixed(2) + ' €';
+    document.getElementById('g-ukupno-bam').textContent = bam.toFixed(2) + ' KM';
+
+    // Stari summary box (za kompatibilnost)
+    const gSummary = document.getElementById('grupa-summary');
+    if (gSummary) gSummary.innerHTML = `
+      <span>${stavke.length} stavki · ${dani||0} dana</span>
+      <strong>${ukupno.toFixed(2)} € <span style="font-size:13px;color:var(--bam)">(${bam.toFixed(2)} KM)</span></strong>`;
   }
 
   async function saljiGrupu() {
