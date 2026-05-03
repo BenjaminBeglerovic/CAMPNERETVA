@@ -873,6 +873,91 @@ app.delete('/api/datum/:datum', async (req,res) => {
   } catch(err) { console.error('❌',err); res.status(500).json({error:'Greška.'}); }
 });
 
+// ─── GET /api/izvjestaj ───────────────────────────────────────────
+// tip: dnevni | sedmicni | mjesecni | godisnji | privremeni
+// za privremeni: datumOd + datumDo
+app.get('/api/izvjestaj', async (req, res) => {
+  if (!fs.existsSync(EXCEL_PUT)) return res.json({ rows: [], sumiraj: {}, period: {} });
+  try {
+    const { tip, datumOd, datumDo } = req.query;
+    const { worksheet } = await ucitajWorkbook();
+    let rows = citajSveRedove(worksheet);
+
+    const danas = danasniDatum();
+    const [gy, gm, gd] = danas.split('-').map(Number);
+
+    let od, doo, periodNaziv;
+
+    if (tip === 'dnevni') {
+      od = danas; doo = danas;
+      periodNaziv = `Dnevni izvještaj — ${gd}.${String(gm).padStart(2,'0')}.${gy}`;
+    } else if (tip === 'sedmicni') {
+      const now = new Date(danas);
+      const day = now.getDay() || 7;
+      const mon = new Date(now); mon.setDate(now.getDate() - day + 1);
+      const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+      od  = mon.toISOString().slice(0,10);
+      doo = sun.toISOString().slice(0,10);
+      periodNaziv = `Sedmični — ${mon.getDate()}.${mon.getMonth()+1}. – ${sun.getDate()}.${sun.getMonth()+1}.${gy}`;
+    } else if (tip === 'mjesecni') {
+      od  = `${gy}-${String(gm).padStart(2,'0')}-01`;
+      doo = danas;
+      periodNaziv = `Mjesečni — ${String(gm).padStart(2,'0')}/${gy}`;
+    } else if (tip === 'godisnji') {
+      od  = `${gy}-01-01`;
+      doo = danas;
+      periodNaziv = `Godišnji — ${gy}`;
+    } else if (tip === 'privremeni') {
+      od  = datumOd || danas;
+      doo = datumDo || danas;
+      const [oy,om,odd] = od.split('-');
+      const [dy,dm,ddd] = doo.split('-');
+      periodNaziv = `Privremeni — ${odd}.${om}.${oy} – ${ddd}.${dm}.${dy}`;
+    } else {
+      return res.status(400).json({ error: 'Nevažeći tip izvještaja.' });
+    }
+
+    rows = rows.filter(r => String(r.datum) >= od && String(r.datum) <= doo);
+
+    // Statistike
+    const ukupnoEUR    = parseFloat(rows.reduce((s,r) => s + (r.eur||0), 0).toFixed(2));
+    const ukupnoBAM    = parseFloat((ukupnoEUR * EUR_BAM).toFixed(2));
+    const placenoEUR   = parseFloat(rows.reduce((s,r) => s + (r.placenoEUR||0), 0).toFixed(2));
+    const ostatakEUR   = parseFloat(rows.reduce((s,r) => s + (r.ostatakEUR||0), 0).toFixed(2));
+    const placeno      = rows.filter(r => r.status?.includes('✅')).length;
+    const neplaceno    = rows.filter(r => r.status === 'Nije plaćeno').length;
+    const djelimicno   = rows.filter(r => r.status?.includes('Djelimično')).length;
+
+    // Po državama
+    const poDrzavi = {};
+    rows.forEach(r => {
+      const d = (r.drzava||'?').trim();
+      poDrzavi[d] = (poDrzavi[d]||0) + 1;
+    });
+
+    // Po vozilima
+    const poVozilu = {};
+    rows.forEach(r => {
+      const v = (r.vozilo||'?').trim().replace(/\s*\(.*?\)/,'').trim();
+      poVozilu[v] = (poVozilu[v]||0) + 1;
+    });
+
+    res.json({
+      rows,
+      periodNaziv,
+      od, doo,
+      ukupnoEUR, ukupnoBAM, placenoEUR, ostatakEUR,
+      brojTurista: rows.length,
+      placanje: { placeno, neplaceno, djelimicno },
+      poDrzavi: Object.entries(poDrzavi).sort((a,b)=>b[1]-a[1]).map(([d,n])=>({drzava:d,broj:n})),
+      poVozilu: Object.entries(poVozilu).sort((a,b)=>b[1]-a[1]).map(([v,n])=>({vozilo:v,broj:n})),
+    });
+  } catch(err) {
+    console.error('❌ Izvještaj greška:', err);
+    res.status(500).json({ error: 'Greška.' });
+  }
+});
+
 // ─── GET /api/statistika ──────────────────────────────────────────
 app.get('/api/statistika', async (req, res) => {
   if (!fs.existsSync(EXCEL_PUT)) return res.json({ prazno: true });
