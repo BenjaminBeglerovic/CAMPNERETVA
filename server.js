@@ -9,7 +9,8 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
-app.use(express.static('frontend'));
+// Servira statičke fajlove (index.html mora biti u istom folderu kao server.js)
+app.use(express.static(path.join(__dirname)));
 
 const DATA_DIR  = path.join(__dirname, 'data');
 const EXCEL_PUT = path.join(DATA_DIR, 'kalkulator.xlsx');
@@ -516,6 +517,16 @@ function generirajRacunGrupe({ grupaId, naziv, drzava, tip, dani, pas, sator, ko
 </body>
 </html>`;
 }
+
+// Catch-all — za sve što nije /api ili /racun, vrati index.html
+app.get('*', (req, res) => {
+  const indexPath = path.join(__dirname, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('index.html nije pronađen. Uvjerite se da je index.html u istom folderu kao server.js');
+  }
+});
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n Kalkulator aktivan na portu ${PORT}`);
