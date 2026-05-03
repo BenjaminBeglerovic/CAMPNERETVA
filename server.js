@@ -9,9 +9,12 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
+// Servira statičke fajlove iz frontend/ foldera
+app.use(express.static(path.join(__dirname, 'frontend')));
+
 // Servira index.html na root
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
 });
 
 const DATA_DIR  = path.join(__dirname, 'data');
@@ -522,7 +525,7 @@ function generirajRacunGrupe({ grupaId, naziv, drzava, tip, dani, pas, sator, ko
 
 // Catch-all — za sve što nije /api ili /racun, vrati index.html
 app.get('*', (req, res) => {
-  const indexPath = path.join(__dirname, 'index.html');
+  const indexPath = path.join(__dirname, 'frontend', 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
