@@ -372,7 +372,30 @@ function generirajRacun(podaci) {
   .sig-line { border-bottom:1px solid #aaa; height:7mm; margin-bottom:1.2mm; }
   .sig-lbl { font-size:6.5pt; color:#888; }
 
-  /* Print bar */
+  /* Checkout Timer */
+  .checkout-box {
+    border:2px solid #1a5c2a; border-radius:6px;
+    padding:3mm 4mm; margin-bottom:3mm;
+    background:#f0f7f0;
+    display:flex; align-items:center; justify-content:space-between; gap:3mm;
+  }
+  .checkout-box .co-left { flex:1; }
+  .checkout-box .co-title { font-size:7pt; font-weight:700; text-transform:uppercase; color:#555; letter-spacing:.4px; margin-bottom:1mm; }
+  .checkout-box .co-date { font-size:9pt; font-weight:700; color:#1a5c2a; }
+  .checkout-box .co-time { font-size:7.5pt; color:#777; margin-top:0.5mm; }
+  .timer-wrap { text-align:center; min-width:28mm; }
+  .timer-lbl { font-size:6pt; color:#777; text-transform:uppercase; letter-spacing:.4px; margin-bottom:1mm; }
+  .timer { font-size:13pt; font-weight:900; color:#1a5c2a; font-variant-numeric:tabular-nums; letter-spacing:1px; }
+  .timer.warn  { color:#b45309; }
+  .timer.over  { color:#dc2626; }
+  .extend-btn {
+    display:none; margin-top:2mm; font-size:7pt; font-weight:700;
+    background:#1a5c2a; color:#fff; border:none; border-radius:4px;
+    padding:2mm 3mm; cursor:pointer; width:100%;
+  }
+  .extend-btn.visible { display:block; }
+  .extended-note { display:none; font-size:7pt; color:#15803d; font-weight:700; margin-top:1mm; text-align:center; }
+  @media print { .checkout-box { background:#f0f7f0 !important; border-color:#1a5c2a !important; } .timer-wrap { display:none; } }
   .pbar { position:fixed; bottom:0; left:0; right:0; background:#111; padding:10px; display:flex; gap:10px; justify-content:center; z-index:999; }
   .btn-p { font-size:13px; font-weight:700; padding:9px 24px; border:none; border-radius:6px; cursor:pointer; font-family:Arial; }
   .btn-p.print { background:#1a5c2a; color:#fff; }
@@ -466,6 +489,21 @@ function generirajRacun(podaci) {
     </div>
   </div>
 
+  <!-- Checkout Timer -->
+  <div class="checkout-box">
+    <div class="co-left">
+      <div class="co-title">Check-out</div>
+      <div class="co-date" id="co-date-str"></div>
+      <div class="co-time">11:00 AM — Check-out time</div>
+    </div>
+    <div class="timer-wrap">
+      <div class="timer-lbl">Time remaining</div>
+      <div class="timer" id="co-timer">--:--:--</div>
+      <button class="extend-btn" id="co-extend-btn" onclick="extendStay()">+ Extend 1 day</button>
+      <div class="extended-note" id="co-extended">Stay extended!</div>
+    </div>
+  </div>
+
   <!-- Status -->
   <div class="sts">${status}</div>
 
@@ -504,6 +542,77 @@ function generirajRacun(podaci) {
   <button class="btn-p print" onclick="window.print()">Print (A5)</button>
   <button class="btn-p close" onclick="window.close()">Close</button>
 </div>
+<script>
+(function() {
+  const datumDolaska = '${datum}';
+  const brojDana     = ${dani};
+  const guestId      = '${id}';
+
+  const parts    = datumDolaska.split('-').map(Number);
+  const checkout = new Date(parts[0], parts[1]-1, parts[2] + brojDana, 11, 0, 0);
+
+  const day_names = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mon_names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('co-date-str').textContent =
+    day_names[checkout.getDay()] + ', ' +
+    checkout.getDate() + ' ' + mon_names[checkout.getMonth()] + ' ' + checkout.getFullYear();
+
+  const timerEl = document.getElementById('co-timer');
+  const btnEl   = document.getElementById('co-extend-btn');
+  const noteEl  = document.getElementById('co-extended');
+  let checkoutMs = checkout.getTime();
+  let extended   = false;
+
+  function pad(n) { return String(Math.floor(n)).padStart(2,'0'); }
+
+  function tick() {
+    const diff = checkoutMs - Date.now();
+    if (diff <= 0 && !extended) {
+      timerEl.textContent = 'EXPIRED';
+      timerEl.className   = 'timer over';
+      btnEl.classList.add('visible');
+      return;
+    }
+    if (!extended) {
+      const h = diff / 3600000;
+      const m = (diff % 3600000) / 60000;
+      const s = (diff % 60000)   / 1000;
+      timerEl.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+      timerEl.className   = diff < 7200000 ? 'timer warn' : 'timer';
+      if (diff < 7200000) btnEl.classList.add('visible');
+    }
+  }
+
+  tick();
+  const iv = setInterval(tick, 1000);
+
+  window.extendStay = function() {
+    fetch('/api/update', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ id: guestId, tipAkcije: 'produzenje', dodatniDani: 1 }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        checkoutMs += 86400000;
+        btnEl.classList.remove('visible');
+        noteEl.style.display = 'block';
+        noteEl.textContent   = 'Stay extended by 1 day!';
+        const newDate = new Date(checkoutMs);
+        document.getElementById('co-date-str').textContent =
+          day_names[newDate.getDay()] + ', ' +
+          newDate.getDate() + ' ' + mon_names[newDate.getMonth()] + ' ' + newDate.getFullYear();
+        extended = false;
+        timerEl.className = 'timer';
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(() => alert('Server not available.'));
+  };
+})();
+</script>
 </body>
 </html>`;
 }
