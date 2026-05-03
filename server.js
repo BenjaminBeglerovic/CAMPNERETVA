@@ -21,7 +21,17 @@ if (!fs.existsSync(DATA_DIR)) { fs.mkdirSync(DATA_DIR, { recursive: true }); }
 const RACUNI_DIR = path.join(__dirname, 'racuni');
 if (!fs.existsSync(RACUNI_DIR)) { fs.mkdirSync(RACUNI_DIR, { recursive: true }); }
 
-const COUNTER_PUT = path.join(DATA_DIR, 'counter.json');
+const NOTIF_PUT = path.join(DATA_DIR, 'notifikacije.json');
+
+function ucitajNotifikacije() {
+  try { return JSON.parse(fs.readFileSync(NOTIF_PUT, 'utf8')); } catch { return []; }
+}
+function dodajNotifikaciju(notif) {
+  const lista = ucitajNotifikacije();
+  lista.unshift({ ...notif, id: genId(), vrijemeDodavanja: new Date().toISOString(), procitano: false });
+  // Čuvaj max 100 notifikacija
+  fs.writeFileSync(NOTIF_PUT, JSON.stringify(lista.slice(0, 100), null, 2), 'utf8');
+}
 function nextBrojRacuna() {
   let data = { zadnji: 0 };
   try { data = JSON.parse(fs.readFileSync(COUNTER_PUT, 'utf8')); } catch {}
@@ -959,6 +969,18 @@ app.put('/api/update', async (req, res) => {
       set('Dana', noviDani); set('Ukupno (€)', novaUk); set('Ukupno (KM)', parseFloat((novaUk*EUR_BAM).toFixed(2)));
       set('Ostatak (€)', noviOst); set('Ostatak (KM)', parseFloat((noviOst*EUR_BAM).toFixed(2))); set('Status', noviStatus);
       poruka = `Produženo +${dodatniDani} dana`;
+      // Spremi notifikaciju
+      dodajNotifikaciju({
+        tip: 'produzenje',
+        gostId: id,
+        gostIme: String(get('Ime i Prezime')),
+        drzava: String(get('Država')),
+        vozilo: String(get('Vrsta Vozila')),
+        noviDani,
+        noviOst,
+        poruka: `${String(get('Ime i Prezime'))} extended stay by ${dodatniDani} day(s). New total: ${noviDani} nights. Balance due: ${noviOst.toFixed(2)}€`,
+        vrijemeNotif: timestamp(),
+      });
 
     } else if (tipAkcije === 'tablice') {
       const t = (tablice||'').trim().toUpperCase();
@@ -1068,6 +1090,28 @@ app.post('/api/grupa', async (req, res) => {
     console.log(`Grupa [${grupaId}] "${naziv}" | ${ukupnoKom} vozila | ${ukupnoTotal.toFixed(2)}€`);
     res.status(200).json({ success: true, grupaId, ukupnoKom, ukupnoEUR: ukupnoTotal, racunUrl: `/racun/GRUPA-${grupaId}` });
   } catch (err) { console.error('Greška grupa:', err); res.status(500).json({ error: 'Greška pri čuvanju grupe.' }); }
+});
+
+app.get('/api/notifikacije', (req, res) => {
+  res.json(ucitajNotifikacije());
+});
+
+app.put('/api/notifikacije/:id/procitaj', (req, res) => {
+  const lista = ucitajNotifikacije();
+  const n = lista.find(x => x.id === req.params.id);
+  if (n) { n.procitano = true; fs.writeFileSync(NOTIF_PUT, JSON.stringify(lista, null, 2), 'utf8'); }
+  res.json({ success: true });
+});
+
+app.delete('/api/notifikacije/:id', (req, res) => {
+  const lista = ucitajNotifikacije().filter(x => x.id !== req.params.id);
+  fs.writeFileSync(NOTIF_PUT, JSON.stringify(lista, null, 2), 'utf8');
+  res.json({ success: true });
+});
+
+app.delete('/api/notifikacije', (req, res) => {
+  fs.writeFileSync(NOTIF_PUT, JSON.stringify([]), 'utf8');
+  res.json({ success: true });
 });
 
 app.get('/api/statistika', async (req, res) => {
