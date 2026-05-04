@@ -21,7 +21,8 @@ if (!fs.existsSync(DATA_DIR)) { fs.mkdirSync(DATA_DIR, { recursive: true }); }
 const RACUNI_DIR = path.join(__dirname, 'racuni');
 if (!fs.existsSync(RACUNI_DIR)) { fs.mkdirSync(RACUNI_DIR, { recursive: true }); }
 
-const NOTIF_PUT = path.join(DATA_DIR, 'notifikacije.json');
+const COUNTER_PUT = path.join(DATA_DIR, 'counter.json');
+const NOTIF_PUT   = path.join(DATA_DIR, 'notifikacije.json');
 
 function ucitajNotifikacije() {
   try { return JSON.parse(fs.readFileSync(NOTIF_PUT, 'utf8')); } catch { return []; }
@@ -126,6 +127,7 @@ const KOLONE = [
   { header:'Država',          key:'drzava',       width:14 },
   { header:'Tablice',         key:'tablice',      width:12 },
   { header:'Vrsta Vozila',    key:'vozilo',       width:14 },
+  { header:'Oprema',          key:'oprema',       width:10 },
   { header:'Osobe',           key:'osobe',        width:8  },
   { header:'Djeca',           key:'djeca',        width:8  },
   { header:'Pas',             key:'pas',          width:6  },
@@ -140,7 +142,7 @@ const KOLONE = [
   { header:'Status',          key:'status',       width:22 },
   { header:'Historija uplata',key:'uplate',       width:35 },
   { header:'Komentar',        key:'komentar',     width:30 },
-  { header:'Timestamp',       key:'timestamp',    width:18 },
+  { header:'Vrijeme unosa',   key:'timestamp',    width:18 },
 ];
 
 async function ucitajWorkbook() {
@@ -148,9 +150,9 @@ async function ucitajWorkbook() {
   let worksheet;
   if (fs.existsSync(EXCEL_PUT)) {
     await workbook.xlsx.readFile(EXCEL_PUT);
-    worksheet = workbook.getWorksheet('Evidencija') || workbook.worksheets[0];
+    worksheet = workbook.getWorksheet('Podaci') || workbook.getWorksheet('Evidencija') || workbook.worksheets[0];
   } else {
-    worksheet = workbook.addWorksheet('Evidencija');
+    worksheet = workbook.addWorksheet('Podaci');
     worksheet.columns = KOLONE;
     const hRow = worksheet.getRow(1);
     hRow.font = { bold:true, color:{ argb:'FFFFFFFF' } };
@@ -184,29 +186,35 @@ function citajSveRedove(worksheet) {
       row.eachCell((c, col) => { hm[String(c.value)] = col; });
       return;
     }
-    const get = k => { const col = hm[k]; if (!col) return ''; const v = row.getCell(col).value; return v != null ? v : ''; };
+    const get = k => {
+      const col = hm[k]; if (!col) return '';
+      const v = row.getCell(col).value; return v != null ? v : '';
+    };
+    // Podrška za stare i nove nazive kolona
+    const ts = get('Timestamp') || get('Vrijeme unosa') || '';
+    const vozilo = get('Vrsta Vozila') || get('Vozilo') || '';
     rows.push({
-      id: String(get('ID')),
-      datum: String(get('Datum')),
-      ime: String(get('Ime i Prezime')),
-      drzava: String(get('Država')),
-      tablice: String(get('Tablice')||'—'),
-      vozilo: String(get('Vrsta Vozila')),
-      osobe: parseFloat(get('Osobe'))||0,
-      djeca: parseFloat(get('Djeca'))||0,
-      pas: String(get('Pas')||'Ne'),
-      sator: String(get('Šator')||'Ne'),
-      dani: parseFloat(get('Dana'))||1,
-      eur: parseFloat(get('Ukupno (€)'))||0,
-      bam: parseFloat(get('Ukupno (KM)'))||0,
-      placenoEUR: parseFloat(get('Plaćeno (€)'))||0,
-      placenoBAM: parseFloat(get('Plaćeno (KM)'))||0,
-      ostatakEUR: parseFloat(get('Ostatak (€)'))||0,
-      ostatakBAM: parseFloat(get('Ostatak (KM)'))||0,
-      status: String(get('Status')),
-      uplate: String(get('Historija uplata')||'—'),
-      komentar: String(get('Komentar')||'—'),
-      timestamp: String(get('Timestamp')),
+      id:         String(get('ID')),
+      datum:      String(get('Datum')),
+      ime:        String(get('Ime i Prezime')),
+      drzava:     String(get('Država')),
+      tablice:    String(get('Tablice') || '—'),
+      vozilo:     String(vozilo),
+      osobe:      parseFloat(get('Osobe'))      || 0,
+      djeca:      parseFloat(get('Djeca'))      || 0,
+      pas:        String(get('Pas')    || 'Ne'),
+      sator:      String(get('Šator') || 'Ne'),
+      dani:       parseFloat(get('Dana'))        || 1,
+      eur:        parseFloat(get('Ukupno (€)'))  || 0,
+      bam:        parseFloat(get('Ukupno (KM)')) || 0,
+      placenoEUR: parseFloat(get('Plaćeno (€)')) || 0,
+      placenoBAM: parseFloat(get('Plaćeno (KM)'))|| 0,
+      ostatakEUR: parseFloat(get('Ostatak (€)')) || 0,
+      ostatakBAM: parseFloat(get('Ostatak (KM)'))|| 0,
+      status:     String(get('Status')),
+      uplate:     String(get('Historija uplata') || '—'),
+      komentar:   String(get('Komentar')  || '—'),
+      timestamp:  String(ts),
     });
   });
   return rows;
@@ -214,8 +222,9 @@ function citajSveRedove(worksheet) {
 
 function sumiraj(rows) {
   return {
-    ukupnoEUR: rows.reduce((s,r) => s + (r.eur||0), 0),
-    ukupnoBAM: rows.reduce((s,r) => s + (r.bam||0), 0),
+    brojTurista: rows.length,
+    ukupnoEUR:  rows.reduce((s,r) => s + (r.eur||0), 0),
+    ukupnoBAM:  rows.reduce((s,r) => s + (r.bam||0), 0),
     placenoEUR: rows.reduce((s,r) => s + (r.placenoEUR||0), 0),
     ostatakEUR: rows.reduce((s,r) => s + (r.ostatakEUR||0), 0),
   };
@@ -264,7 +273,7 @@ function generirajRacun(podaci) {
   const datumPrikaz = `${gd}.${gm}.${gy}`;
   const statusBoja = status?.includes('U') ? '#15803d' : status?.includes('jelim') ? '#b45309' : '#dc2626';
 
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https://campneretva.onrender.com/racun/${id}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=http://localhost:3000/racun/${id}`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -486,7 +495,7 @@ function generirajRacun(podaci) {
   </div>
 
   <!-- Checkout Timer -->
-  <div class="checkout-box">
+  <div class="checkout-box" id="co-box" style="display:none">
     <div class="co-left">
       <div class="co-title">Check-out</div>
       <div class="co-date" id="co-date-str"></div>
@@ -496,7 +505,7 @@ function generirajRacun(podaci) {
       <div class="timer-lbl">Time remaining</div>
       <div class="timer" id="co-timer">--:--:--</div>
       <button class="extend-btn" id="co-extend-btn" onclick="extendStay()">+ Extend 1 day</button>
-      <div class="extended-note" id="co-extended">Stay extended!</div>
+      <div class="extended-note" id="co-extended"></div>
     </div>
   </div>
 
@@ -558,6 +567,27 @@ function generirajRacun(podaci) {
   let checkoutMs = checkout.getTime();
   let extended   = false;
 
+  // Provjeri localStorage da li je već produžen za ovaj račun
+  const storageKey = 'extended_' + guestId;
+  const extendedUntil = parseInt(localStorage.getItem(storageKey) || '0');
+
+  // Ako je već produžen — prikaži tajmer ali zaključaj dugme trajno
+  if (extendedUntil > 0) {
+    document.getElementById('co-box').style.display = 'flex';
+    checkoutMs = extendedUntil;
+    extended = true;
+    btnEl.disabled = true;
+    btnEl.style.background = '#555';
+    btnEl.style.cursor = 'not-allowed';
+    btnEl.textContent = '🔒 Already extended';
+    const newDate = new Date(checkoutMs);
+    document.getElementById('co-date-str').textContent =
+      day_names[newDate.getDay()] + ', ' +
+      newDate.getDate() + ' ' + mon_names[newDate.getMonth()] + ' ' + newDate.getFullYear();
+    noteEl.style.display = 'block';
+    noteEl.innerHTML = '✅ Stay extended by 1 day!<br><strong style="color:#b45309">Please visit reception to make payment.</strong>';
+  }
+
   function pad(n) { return String(Math.floor(n)).padStart(2,'0'); }
 
   function tick() {
@@ -565,7 +595,6 @@ function generirajRacun(podaci) {
     if (diff <= 0 && !extended) {
       timerEl.textContent = 'EXPIRED';
       timerEl.className   = 'timer over';
-      btnEl.classList.add('visible');
       return;
     }
     if (!extended) {
@@ -584,9 +613,10 @@ function generirajRacun(podaci) {
   }
 
   tick();
-  const iv = setInterval(tick, 1000);
+  const iv = setInterval(tick, 60000);
 
   window.extendStay = function() {
+    if (extended) return;
     fetch('/api/update', {
       method: 'PUT',
       headers: {'Content-Type':'application/json'},
@@ -596,14 +626,26 @@ function generirajRacun(podaci) {
     .then(data => {
       if (data.success) {
         checkoutMs += 86400000;
-        btnEl.style.display  = 'none';
+        extended = true;
+
+        // Prikaži checkout box
+        document.getElementById('co-box').style.display = 'flex';
+
+        // Trajno zaključaj dugme — nema više produženja
+        btnEl.disabled = true;
+        btnEl.style.background = '#555';
+        btnEl.style.cursor = 'not-allowed';
+        btnEl.textContent = '🔒 Already extended';
+        localStorage.setItem(storageKey, String(checkoutMs));
+
+        const novaUk  = data.novaUk  ? data.novaUk.toFixed(2)  : '?';
+        const noviOst = data.noviOst ? data.noviOst.toFixed(2) : '?';
         noteEl.style.display = 'block';
-        noteEl.innerHTML     = '✅ Stay extended by 1 day!<br><strong style="color:#b45309">Please visit reception to make payment.</strong>';
+        noteEl.innerHTML = '✅ Stay extended by 1 day!<br><strong style="color:#b45309">Please visit reception to make payment.</strong><br><span style="font-size:8pt;color:#555">New total: ' + novaUk + ' € | Balance due: ' + noviOst + ' €</span>';
         const newDate = new Date(checkoutMs);
         document.getElementById('co-date-str').textContent =
           day_names[newDate.getDay()] + ', ' +
           newDate.getDate() + ' ' + mon_names[newDate.getMonth()] + ' ' + newDate.getFullYear();
-        extended = false;
         timerEl.className = 'timer';
       } else {
         alert('Error: ' + (data.error || 'Unknown error'));
@@ -875,34 +917,75 @@ app.post('/api/kalkulator', async (req, res) => {
   const data = req.body;
   const greska = validiraj(data);
   if (greska) return res.status(400).json({ error: greska });
-  const { eur, bam } = izracunajCijenu(data);
+
+  // Koristi cijenu sa frontenda ako je poslana, inače računaj
+  const { eur: eurCalc, bam: bamCalc } = izracunajCijenu(data);
+  const eur = parseFloat((data.ukupnoEUR || eurCalc).toFixed(2));
+  const bam = parseFloat((eur * EUR_BAM).toFixed(2));
+
   const placenoEUR = parseFloat((data.placenoEUR ?? 0).toFixed(2));
   const ostatakEUR = parseFloat(Math.max(0, eur - placenoEUR).toFixed(2));
   const status = izracunajStatus(placenoEUR, eur);
-  const uplateStr = (data.uplate ?? []).map((u,i) => `${i+1}. ${u.iznos.toFixed(2)}€${u.napomena ? ' — '+u.napomena : ''} (${u.vrijeme})`).join('\n') || '—';
+
+  // Uplate — prihvati i ako iznos nije number
+  const uplateArr = (data.uplate ?? []).map((u, i) => {
+    const iznos = parseFloat(u.iznos) || 0;
+    return `${i+1}. ${iznos.toFixed(2)}€${u.napomena ? ' — '+u.napomena : ''} (${u.vrijeme || ''})`;
+  });
+  const uplateStr = uplateArr.length > 0 ? uplateArr.join('\n') : '—';
   const racunBroj = nextBrojRacuna();
   try {
     const { workbook, worksheet } = await ucitajWorkbook();
     const id = genId(); const datum = danasniDatum();
     const tablice = (data.tablice||'').trim().toUpperCase() || '—';
+    const drzava  = (data.drzava||'').trim().toUpperCase();
     const pas   = parseInt(data.pas)   || 0;
     const sator = parseInt(data.sator) || 0;
-    const noviRed = worksheet.addRow({
-      id, datum, ime: data.ime, drzava: data.drzava, tablice,
-      vozilo: VOZILO_NAZIV[data.vozilo] || data.vozilo,
-      osobe: parseInt(data.osobe)||0, djeca: parseInt(data.djeca)||0,
-      pas: pas > 0 ? `${pas} 🐕` : 'Ne',
-      sator: sator > 0 ? `${sator} ⛺` : 'Ne',
-      dani: data.dani, eur, bam, placenoEUR,
-      placenoBAM: parseFloat((placenoEUR * EUR_BAM).toFixed(2)),
-      ostatakEUR, ostatakBAM: parseFloat((ostatakEUR * EUR_BAM).toFixed(2)),
-      status, uplate: uplateStr, komentar: (data.komentar||'').trim()||'—', timestamp: timestamp(),
-    });
-    stilujRed(noviRed, status);
+    const ts = timestamp();
+
+    // Čitaj header mapu da znamo redosljed kolona
+    const hRow = worksheet.getRow(1);
+    const hm = {};
+    hRow.eachCell((c, col) => { hm[String(c.value)] = col; });
+
+    // Dodaj red na kraj
+    const noviRed = worksheet.addRow([]);
+    const newRowNum = noviRed.number;
+    const set = (k, v) => {
+      const col = hm[k];
+      if (col) worksheet.getRow(newRowNum).getCell(col).value = v;
+    };
+
+    set('ID', id);
+    set('Datum', datum);
+    set('Ime i Prezime', data.ime);
+    set('Država', drzava);
+    set('Tablice', tablice);
+    set('Vrsta Vozila', VOZILO_NAZIV[data.vozilo] || data.vozilo);
+    set('Osobe', parseInt(data.osobe)||0);
+    set('Djeca', parseInt(data.djeca)||0);
+    set('Pas', pas > 0 ? `${pas} 🐕` : 'Ne');
+    set('Šator', sator > 0 ? `${sator} ⛺` : 'Ne');
+    set('Dana', data.dani);
+    set('Ukupno (€)', eur);
+    set('Ukupno (KM)', bam);
+    set('Plaćeno (€)', placenoEUR);
+    set('Plaćeno (KM)', parseFloat((placenoEUR * EUR_BAM).toFixed(2)));
+    set('Ostatak (€)', ostatakEUR);
+    set('Ostatak (KM)', parseFloat((ostatakEUR * EUR_BAM).toFixed(2)));
+    set('Status', status);
+    set('Historija uplata', uplateStr);
+    set('Komentar', (data.komentar||'').trim()||'—');
+    set('Timestamp', ts);
+    set('Vrijeme unosa', ts);
+
+    const finalRow = worksheet.getRow(newRowNum);
+    stilujRed(finalRow, status);
+    finalRow.commit();
     await workbook.xlsx.writeFile(EXCEL_PUT);
 
     const racunHTML = generirajRacun({
-      id, racunBroj, ime: data.ime, drzava: data.drzava, tablice,
+      id, racunBroj, ime: data.ime, drzava, tablice,
       vozilo: VOZILO_NAZIV[data.vozilo] || data.vozilo,
       osobe: parseInt(data.osobe)||0, djeca: parseInt(data.djeca)||0,
       pas, sator, dani: data.dani, eur, bam, placenoEUR, ostatakEUR, status,
@@ -934,6 +1017,7 @@ app.put('/api/update', async (req, res) => {
     const get = k => { const col = hm[k]; if (!col) return ''; const v = tr.getCell(col).value; return v != null ? v : ''; };
     const set = (k, v) => { const col = hm[k]; if (col) tr.getCell(col).value = v; };
     let poruka = ''; let noviStatus = String(get('Status'));
+    let novaUk, noviOst, noviDani;
 
     if (tipAkcije === 'uplata' || tipAkcije === 'ispravi') {
       const ukupno = parseFloat(get('Ukupno (€)'))||0;
@@ -955,16 +1039,14 @@ app.put('/api/update', async (req, res) => {
 
     } else if (tipAkcije === 'produzenje') {
       const stariDani = parseInt(get('Dana'))||1;
-      const noviDani  = stariDani + parseInt(dodatniDani||1);
-      const vNaz = String(get('Vrsta Vozila'));
-      const vKey = Object.keys(VOZILO_NAZIV).find(k => VOZILO_NAZIV[k] === vNaz) || 'auto';
-      const osobe = parseFloat(get('Osobe'))||0; const djeca = parseFloat(get('Djeca'))||0;
-      const pasStr = String(get('Pas')||''); const pasN = parseInt(pasStr) || (pasStr === 'Da' ? 1 : 0);
-      const satStr = String(get('Šator')||''); const satN = parseInt(satStr) || (satStr === 'Da' ? 1 : 0);
-      const perDay = (VOZILO_CIJENA[vKey]??0) + osobe*CIJENA.osoba + djeca*CIJENA.dijete + pasN*CIJENA.pas + satN*CIJENA.sator;
-      const novaUk = parseFloat((perDay * noviDani).toFixed(2));
+      noviDani  = stariDani + parseInt(dodatniDani||1);
+      const stariUkupno = parseFloat(get('Ukupno (€)'))||0;
+      // Cijenu po danu uzmi iz postojećeg ukupnog / broj dana — najsigurniji način
+      const perDay = parseFloat((stariUkupno / stariDani).toFixed(2));
+      // Dodaj samo cijenu jednog dana
+      novaUk = parseFloat((stariUkupno + perDay * parseInt(dodatniDani||1)).toFixed(2));
       const stariPl = parseFloat(get('Plaćeno (€)'))||0;
-      const noviOst = parseFloat(Math.max(0, novaUk - stariPl).toFixed(2));
+      noviOst = parseFloat(Math.max(0, novaUk - stariPl).toFixed(2));
       noviStatus = izracunajStatus(stariPl, novaUk);
       set('Dana', noviDani); set('Ukupno (€)', novaUk); set('Ukupno (KM)', parseFloat((novaUk*EUR_BAM).toFixed(2)));
       set('Ostatak (€)', noviOst); set('Ostatak (KM)', parseFloat((noviOst*EUR_BAM).toFixed(2))); set('Status', noviStatus);
@@ -992,7 +1074,7 @@ app.put('/api/update', async (req, res) => {
     stilujRed(tr, noviStatus); tr.commit();
     await workbook.xlsx.writeFile(EXCEL_PUT);
     console.log(`Update [${id}]: ${poruka}`);
-    res.json({ success: true, poruka, noviStatus });
+    res.json({ success: true, poruka, noviStatus, novaUk: novaUk ?? null, noviOst: noviOst ?? null, noviDani: noviDani ?? null });
   } catch (err) { console.error('Greška update:', err); res.status(500).json({ error: 'Greška.' }); }
 });
 
@@ -1029,7 +1111,8 @@ app.delete('/api/datum/:datum', async (req, res) => {
 
 app.post('/api/grupa', async (req, res) => {
   syncCijene();
-  const { naziv, drzava, dani, pas, sator, komentar, placeno, placenoNap, tip, vozila, osobe, djeca } = req.body;
+  const { naziv, dani, pas, sator, komentar, placeno, placenoNap, tip, vozila, osobe, djeca } = req.body;
+  const drzava = (req.body.drzava||'').trim().toUpperCase();
   if (!naziv || naziv.length < 2)          return res.status(400).json({ error: 'Naziv grupe je obavezan.' });
   if (!drzava || drzava.length < 2)        return res.status(400).json({ error: 'Država je obavezna.' });
   if (!Array.isArray(vozila) || vozila.length === 0) return res.status(400).json({ error: 'Dodajte barem jedno vozilo.' });
@@ -1114,6 +1197,55 @@ app.delete('/api/notifikacije', (req, res) => {
   res.json({ success: true });
 });
 
+// ─── Rezervacije ───────────────────────────────────────────────────────────────
+const REZ_PUT = path.join(DATA_DIR, 'rezervacije.json');
+function ucitajRez() { try { return JSON.parse(fs.readFileSync(REZ_PUT,'utf8')); } catch { return []; } }
+function sacuvajRez(lista) { fs.writeFileSync(REZ_PUT, JSON.stringify(lista, null, 2), 'utf8'); }
+
+// Primanje rezervacije sa web forme (ili manuelno)
+app.post('/api/rezervacija', (req, res) => {
+  const { ime, email, telefon, datumDolaska, datumOdlaska, vozilo, osobe, djeca, komentar } = req.body;
+  if (!ime || !datumDolaska || !datumOdlaska) return res.status(400).json({ error: 'Ime, datumDolaska i datumOdlaska su obavezni.' });
+  const nova = {
+    id: genId(),
+    ime, email: email||'', telefon: telefon||'',
+    datumDolaska, datumOdlaska,
+    vozilo: vozilo||'', osobe: osobe||1, djeca: djeca||0,
+    komentar: komentar||'',
+    status: 'nova',
+    vrijemePrimanja: timestamp(),
+  };
+  const lista = ucitajRez();
+  lista.unshift(nova);
+  sacuvajRez(lista);
+  // Dodaj notifikaciju
+  dodajNotifikaciju({
+    tip: 'rezervacija',
+    gostId: nova.id,
+    gostIme: ime,
+    poruka: `New reservation from ${ime} — ${datumDolaska} to ${datumOdlaska} (${Math.round((new Date(datumOdlaska)-new Date(datumDolaska))/86400000)} nights)`,
+    vrijemeNotif: timestamp(),
+  });
+  console.log(`Rezervacija: ${ime} | ${datumDolaska} → ${datumOdlaska}`);
+  res.json({ success: true, id: nova.id });
+});
+
+app.get('/api/rezervacije', (req, res) => { res.json(ucitajRez()); });
+
+app.put('/api/rezervacije/:id', (req, res) => {
+  const lista = ucitajRez();
+  const r = lista.find(x => x.id === req.params.id);
+  if (!r) return res.status(404).json({ error: 'Nije pronađena.' });
+  if (req.body.status) r.status = req.body.status;
+  sacuvajRez(lista);
+  res.json({ success: true });
+});
+
+app.delete('/api/rezervacije/:id', (req, res) => {
+  sacuvajRez(ucitajRez().filter(x => x.id !== req.params.id));
+  res.json({ success: true });
+});
+
 app.get('/api/statistika', async (req, res) => {
   if (!fs.existsSync(EXCEL_PUT)) return res.json({ rows: [] });
   try {
@@ -1122,8 +1254,72 @@ app.get('/api/statistika', async (req, res) => {
     const { datumOd, datumDo } = req.query;
     if (datumOd) rows = rows.filter(r => r.datum >= datumOd);
     if (datumDo) rows = rows.filter(r => r.datum <= datumDo);
-    res.json({ rows, ...sumiraj(rows) });
-  } catch (err) { res.status(500).json({ error: 'Greška.' }); }
+
+    // Po državi
+    const drzMap = {};
+    rows.forEach(r => {
+      if (!drzMap[r.drzava]) drzMap[r.drzava] = { drzava: r.drzava, turista: 0, prihod: 0, dani: 0 };
+      drzMap[r.drzava].turista++;
+      drzMap[r.drzava].prihod += r.eur||0;
+      drzMap[r.drzava].dani   += r.dani||0;
+    });
+    const poDrzavi = Object.values(drzMap).sort((a,b) => b.turista - a.turista);
+
+    // Po vozilu
+    const vozMap = {};
+    rows.forEach(r => {
+      if (!vozMap[r.vozilo]) vozMap[r.vozilo] = { vozilo: r.vozilo, broj: 0, prihod: 0 };
+      vozMap[r.vozilo].broj++;
+      vozMap[r.vozilo].prihod += r.eur||0;
+    });
+    const poVozilu = Object.values(vozMap).sort((a,b) => b.broj - a.broj);
+
+    // Po danu
+    const danMap = {};
+    rows.forEach(r => {
+      if (!danMap[r.datum]) danMap[r.datum] = { datum: r.datum, turista: 0, prihod: 0 };
+      danMap[r.datum].turista++;
+      danMap[r.datum].prihod += r.eur||0;
+    });
+    const poDanu = Object.values(danMap).sort((a,b) => a.datum.localeCompare(b.datum));
+
+    // Po satu — iz timestamp kolone
+    const satMap = {};
+    for (let i = 0; i < 24; i++) satMap[i] = { sat: i, turista: 0, prihod: 0 };
+    rows.forEach(r => {
+      const ts = r.timestamp || '';
+      const match = ts.match(/(\d{1,2}):(\d{2})/);
+      if (match) {
+        const sat = parseInt(match[1]);
+        if (sat >= 0 && sat < 24) {
+          satMap[sat].turista++;
+          satMap[sat].prihod += r.eur||0;
+        }
+      }
+    });
+    const poSatu = Object.values(satMap).filter(s => s.turista > 0);
+
+    // Plaćanje status
+    const placanje = { placeno: 0, djelimicno: 0, neplaceno: 0 };
+    rows.forEach(r => {
+      if (r.status?.includes('✅')) placanje.placeno++;
+      else if (r.status?.includes('Djelim')) placanje.djelimicno++;
+      else placanje.neplaceno++;
+    });
+
+    const ukupnoEUR    = rows.reduce((s,r) => s + (r.eur||0), 0);
+    const ukupnoPlaceno = rows.reduce((s,r) => s + (r.placenoEUR||0), 0);
+    const ukupnoOstatak = rows.reduce((s,r) => s + (r.ostatakEUR||0), 0);
+    const ukupnoDana    = rows.reduce((s,r) => s + (r.dani||0), 0);
+
+    res.json({
+      rows,
+      ukupnoTurista: rows.length,
+      ukupnoEUR, ukupnoPlaceno, ukupnoOstatak,
+      prosjecniBoravak: rows.length ? (ukupnoDana / rows.length).toFixed(1) : 0,
+      placanje, poDrzavi, poVozilu, poDanu, poSatu,
+    });
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Greška.' }); }
 });
 
 app.get('/api/izvjestaj', async (req, res) => {
@@ -1172,16 +1368,6 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n Camping Neretva server aktivan na portu ${PORT}`);
-  console.log(` https://campneretva.onrender.com\n`);
-
-  // Keep-alive — pinga server svake 14 min da ne zaspi (Render free plan)
-  setInterval(() => {
-    const https = require('https');
-    https.get('https://campneretva.onrender.com/api/status', (res) => {
-      console.log(`Keep-alive ping: ${res.statusCode}`);
-    }).on('error', (e) => {
-      console.log(`Keep-alive greška: ${e.message}`);
-    });
-  }, 14 * 60 * 1000); // svakih 14 minuta
+  console.log(`\n Camping Neretva server aktivan!`);
+  console.log(` http://localhost:${PORT}\n`);
 });
