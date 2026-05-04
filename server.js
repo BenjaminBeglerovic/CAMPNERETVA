@@ -1174,4 +1174,14 @@ app.get('*', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n Camping Neretva server aktivan na portu ${PORT}`);
   console.log(` https://campneretva.onrender.com\n`);
+
+  // Keep-alive — pinga server svake 14 min da ne zaspi (Render free plan)
+  setInterval(() => {
+    const https = require('https');
+    https.get('https://campneretva.onrender.com/api/status', (res) => {
+      console.log(`Keep-alive ping: ${res.statusCode}`);
+    }).on('error', (e) => {
+      console.log(`Keep-alive greška: ${e.message}`);
+    });
+  }, 14 * 60 * 1000); // svakih 14 minuta
 });
